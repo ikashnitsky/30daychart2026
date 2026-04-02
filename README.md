@@ -43,3 +43,12 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 
 ![](out/png/02-dataviz-rules-poster.png)
 
+
+## Day 3
+
+2026-04-03 \| mosaic \|
+[code](src/03-mosaic.r) \|
+[pplx](https://www.perplexity.ai/search/day-3-mosaic-let-s-use-this-ti-zDS__DsJRq.JzH_jXJ7NVw) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/)
+
+![](out/png/03-mosaic.png)
