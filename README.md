@@ -1,2 +1,28 @@
-# temp
-template repo with usual file structure
+# #30DayChartChallenge 2026 Edition
+
+## My concept for this year run
+
+In 2026, coding can never be the same for me. It would be ridiculous to pretend that LLMs are not better than me at coding, or at least much faster. So this year I decided to participate in the challenge with most of the heavylifting done by AI helpers. I created a dedicated space in perplexity with the system prompt that you can see [here](doc/system-prompt.md). I will also link to the chats with LLMs for transparency and probbaly also educational purposes. And yes, I expect that this setting will actually allow me participate wihtout an extreme toll on my available time. 
+
+## #30DayChartChallenge topics
+
+![](doc/30daychart2026.png)
+
+# My contributions
+
+|                            |                         |                            |                             |                           |
+|----------------------------|-------------------------|----------------------------|-----------------------------|---------------------------|
+| [01 part-to-whole](#day-1) | [07 multiscale](#day-7)   | [13 ecosystems](#day-13)  | [19 evolution](#day-19) | [25 space](#day-25) |
+| [02 pictogram](#day-2)     | [08 circular](#day-8)    | [14 trade](#day-14)        | [20 global change](#day-20)       | [26 trend](#day-26)      |
+| [03 mosaic](#day-3)    | [09 wealth](#day-9) | [15 correlation](#day-15) | [21 historical](#day-21)     | [27 animation](#day-27) |
+| [04 slope](#day-4)       | [10 pop culture](#day-10)  | [16 causation](#day-16)        | [22 new tool](#day-22)     | [28 modeling](#day-28)      |
+| [05 experimental](#day-5)         | [11 physical](#day-11)  | [17 remake](#day-17)  | [23 seasons](#day-23)         | [29 monochrome](#day-29)  |
+| [06 FlowingData](#day-6)  | [12 Reporters Without Borders](#day-12)    | [18 South China Morning Post](#day-18)  | [24 UNICEF](#day-24)    | [30 Global Health Data Exchange](#day-30)          |
+
+
+## Day 1
+
+2026-04-01 \| part-to-whole \|
+[code](src/01-part-to-whole.r) \|
+[pplx](https://www.perplexity.ai/search/day-1-part-to-whole-let-s-play-9r2UB4azS3iaj5urON4OXg) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mihz3q3aa22m)
