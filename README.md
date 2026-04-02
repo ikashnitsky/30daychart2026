@@ -26,3 +26,5 @@ In 2026, coding can never be the same for me. It would be ridiculous to pretend 
 [code](src/01-part-to-whole.r) \|
 [pplx](https://www.perplexity.ai/search/day-1-part-to-whole-let-s-play-9r2UB4azS3iaj5urON4OXg) \|
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mihz3q3aa22m)
+
+![](out/01-part-to-whole.pdf)
