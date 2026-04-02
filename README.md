@@ -28,3 +28,15 @@ In 2026, coding can never be the same for me. It would be ridiculous to pretend 
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mihz3q3aa22m)
 
 ![](out/png/01-part-to-whole.png)
+
+## Day 2
+
+2026-04-02 \| pictogram \|
+[code](src/02-pictogram.r) \|
+[pplx](https://www.perplexity.ai/search/day-2-pictogram-visualize-my-d-5.dmFgnySe.ZSfIqBHgSng) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/)
+
+![](out/png/02-pictogram.png)
+
+Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5)
+![](out/png/02-dataviz-rules-poster.png)
