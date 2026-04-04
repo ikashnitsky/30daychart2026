@@ -52,3 +52,12 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/)
 
 ![](out/png/03-mosaic.png)
+
+## Day 4
+
+2026-04-03 \| slope \|
+[code](src/04-slope.r) \|
+[pplx](https://www.perplexity.ai/search/day-4-slope-let-s-visualize-in-yMJ4ws41Qmimh9H2O9G5HA) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3minpvrwemc2h)
+
+![](out/png/04-slope.png)
