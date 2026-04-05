@@ -55,9 +55,19 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 
 ## Day 4
 
-2026-04-03 \| slope \|
+2026-04-04 \| slope \|
 [code](src/04-slope.r) \|
 [pplx](https://www.perplexity.ai/search/day-4-slope-let-s-visualize-in-yMJ4ws41Qmimh9H2O9G5HA) \|
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/3minpvrwemc2h)
 
 ![](out/png/04-slope.png)
+
+
+## Day 5
+
+2026-04-05 \| slope \|
+[code](src/05-experimental.r) \|
+[pplx](https://www.perplexity.ai/search/day-5-experimental-for-today-i-ldYZ2qw3Q3qBmwhhF902CQ) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mipyshnmak2t) \| [INETRACTIVE D3](https://ikashnitsky.phd/x/d3/05-experimental.html)
+
+![](out/png/05-experimental.png)

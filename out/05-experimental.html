@@ -1,0 +1,2808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Expectancy 1960→2020 | Day 5 · Experimental · #30DayChartChallenge 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    :root {
+      --bg: #eeffff;
+      --text: #1a3333;
+      --muted: #446666;
+      --border: #99cccc;
+      --africa:   #ff5872;
+      --americas: #00c4d8;
+      --asia:     #5aaa00;
+      --europe:   #3B90FF;
+      --oceania:  #E37900;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      font-family: 'Atkinson Hyperlegible', system-ui, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+    }
+    #wrap { max-width: 1120px; margin: 0 auto; padding: 28px 16px 40px; }
+
+    /* ── Header ── */
+    #hdr { margin-bottom: 18px; }
+    h1 { font-size: 22px; font-weight: 700; line-height: 1.25; }
+    .sub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Controls ── */
+    #ctrl {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .lbl { font-size: 11px; font-weight: 700; color: var(--muted);
+            text-transform: uppercase; letter-spacing: .06em; }
+
+    .cbtn {
+      padding: 3px 11px; border-radius: 20px; border: 2px solid currentColor;
+      background: transparent; font-family: inherit; font-size: 11.5px;
+      font-weight: 700; cursor: pointer;
+      transition: background .18s, color .18s, opacity .18s;
+    }
+    .cbtn:hover { opacity: .8; }
+    .cbtn.on { color: #fff !important; }
+    .cbtn[data-c="All"]      { color: var(--text); border-color: var(--muted); }
+    .cbtn[data-c="All"].on   { background: var(--text); }
+    .cbtn[data-c="Africa"]   { color: var(--africa); }
+    .cbtn[data-c="Africa"].on  { background: var(--africa); }
+    .cbtn[data-c="Americas"] { color: var(--americas); }
+    .cbtn[data-c="Americas"].on { background: var(--americas); color: var(--text) !important; }
+    .cbtn[data-c="Asia"]     { color: var(--asia); }
+    .cbtn[data-c="Asia"].on  { background: var(--asia); color: var(--text) !important; }
+    .cbtn[data-c="Europe"]   { color: var(--europe); }
+    .cbtn[data-c="Europe"].on { background: var(--europe); }
+    .cbtn[data-c="Oceania"]  { color: var(--oceania); }
+    .cbtn[data-c="Oceania"].on { background: var(--oceania); }
+
+    #gbtn {
+      padding: 3px 11px; border-radius: 20px; border: 2px solid #006666;
+      background: transparent; font-family: inherit; font-size: 11.5px;
+      font-weight: 700; color: #006666; cursor: pointer;
+      transition: background .18s, color .18s;
+    }
+    #gbtn.on { background: #006666; color: #fff; }
+
+    #srch {
+      margin-left: auto; padding: 3px 11px;
+      border: 1.5px solid var(--border); border-radius: 20px;
+      background: #fff; font-family: inherit; font-size: 11.5px;
+      color: var(--text); width: 155px; outline: none;
+      transition: border-color .2s;
+    }
+    #srch:focus { border-color: #006666; }
+
+    #pin-note {
+      font-size: 11px; color: var(--muted); padding: 2px 8px;
+      border-radius: 10px; background: #ccffff; display: none;
+    }
+    #pin-note.vis { display: inline; }
+
+    /* ── Chart ── */
+    #chart { overflow-x: auto; }
+    svg { display: block; }
+
+    path.cline { cursor: pointer; }
+    path.hit   { cursor: pointer; fill: none; stroke: transparent; stroke-width: 10; }
+
+    /* ── Tooltip ── */
+    #tip {
+      position: fixed; background: #fff; border: 1px solid var(--border);
+      border-radius: 11px; padding: 11px 15px; font-size: 12.5px;
+      pointer-events: none; opacity: 0; z-index: 200;
+      box-shadow: 0 4px 18px rgba(0,80,80,.13);
+      transition: opacity .13s; min-width: 185px;
+    }
+    .th { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+    .tf { border-radius: 3px; width: 28px; height: 20px; object-fit: cover; }
+    .tc { font-weight: 700; font-size: 14px; }
+    .tb {
+      font-size: 10.5px; font-weight: 700; padding: 1px 7px;
+      border-radius: 8px; margin-top: 2px; display: inline-block;
+    }
+    .tr { display: flex; justify-content: space-between; gap: 14px;
+           font-size: 12px; line-height: 1.75; }
+    .tl { color: var(--muted); }
+    .tv { font-weight: 700; }
+    .tg {
+      margin-top: 5px; padding-top: 5px; border-top: 1px solid #ddeeee;
+      font-size: 13px; font-weight: 700; color: #006666;
+    }
+
+    /* ── Caption ── */
+    .cap {
+      margin-top: 7px; font-size: 11px; color: var(--muted); line-height: 1.55;
+    }
+    .cap a { color: #006666; text-decoration: none; }
+    .cap a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div id="wrap">
+
+  <div id="hdr">
+    <h1>Life expectancy increased in every country</h1>
+    <p class="sub">
+      Day 5 · Experimental | #30DayChartChallenge 2026
+      &nbsp;·&nbsp; 1960 → 2020, 232 countries, lines colored by world region
+      &nbsp;·&nbsp; <em>Hover or click a line · filter by continent · search</em>
+    </p>
+  </div>
+
+  <div id="ctrl">
+    <span class="lbl">Filter</span>
+    <button class="cbtn on" data-c="All">All</button>
+    <button class="cbtn" data-c="Africa">Africa</button>
+    <button class="cbtn" data-c="Americas">Americas</button>
+    <button class="cbtn" data-c="Asia">Asia</button>
+    <button class="cbtn" data-c="Europe">Europe</button>
+    <button class="cbtn" data-c="Oceania">Oceania</button>
+    <button id="gbtn">⬆ Top 20 gainers</button>
+    <span id="pin-note">📌 click line to unpin</span>
+    <input id="srch" type="text" placeholder="Search country…">
+  </div>
+
+  <div id="chart"></div>
+
+  <p class="cap">
+    Data: <a href="https://github.com/daviddiviny/owidapi" target="_blank">{owidapi}</a>
+    R package · Our World in Data ·
+    R data export: <code>05-experimental-data-export.R</code><br>
+    #30DayChartChallenge 2026 · Ilya Kashnitsky @ikashnitsky.phd
+  </p>
+</div>
+
+<div id="tip">
+  <div class="th">
+    <img class="tf" id="t-flag" src="" alt="">
+    <div>
+      <div class="tc" id="t-name"></div>
+      <span class="tb" id="t-cont"></span>
+    </div>
+  </div>
+  <div class="tr"><span class="tl">1960</span><span class="tv" id="t-1960"></span></div>
+  <div class="tr"><span class="tl">2020</span><span class="tv" id="t-2020"></span></div>
+  <div class="tg" id="t-gain"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA — generated by 05-experimental-data-export.R via Python mirror
+// ════════════════════════════════════════════════════════
+const DATA = [
+  {
+    "country": "Guernsey",
+    "continent": "Europe",
+    "iso2": "gg",
+    "y1960": 75.19,
+    "y2020": 83.35,
+    "gain": 8.15,
+    "yPosLeft": 87.0,
+    "yPosRight": 84.3333
+  },
+  {
+    "country": "Iceland",
+    "continent": "Europe",
+    "iso2": "is",
+    "y1960": 74.05,
+    "y2020": 82.71,
+    "gain": 8.66,
+    "yPosLeft": 86.6667,
+    "yPosRight": 83.0
+  },
+  {
+    "country": "Norway",
+    "continent": "Europe",
+    "iso2": "no",
+    "y1960": 73.56,
+    "y2020": 83.2,
+    "gain": 9.63,
+    "yPosLeft": 86.3333,
+    "yPosRight": 84.0
+  },
+  {
+    "country": "Netherlands",
+    "continent": "Europe",
+    "iso2": "nl",
+    "y1960": 73.35,
+    "y2020": 81.39,
+    "gain": 8.04,
+    "yPosLeft": 86.0,
+    "yPosRight": 76.0
+  },
+  {
+    "country": "San Marino",
+    "continent": "Europe",
+    "iso2": "sm",
+    "y1960": 73.2,
+    "y2020": 82.65,
+    "gain": 9.45,
+    "yPosLeft": 85.6667,
+    "yPosRight": 82.0
+  },
+  {
+    "country": "Sweden",
+    "continent": "Europe",
+    "iso2": "se",
+    "y1960": 73.04,
+    "y2020": 82.43,
+    "gain": 9.39,
+    "yPosLeft": 85.3333,
+    "yPosRight": 81.0
+  },
+  {
+    "country": "Denmark",
+    "continent": "Europe",
+    "iso2": "dk",
+    "y1960": 72.2,
+    "y2020": 81.55,
+    "gain": 9.35,
+    "yPosLeft": 85.0,
+    "yPosRight": 77.3333
+  },
+  {
+    "country": "Andorra",
+    "continent": "Europe",
+    "iso2": "ad",
+    "y1960": 72.09,
+    "y2020": 79.42,
+    "gain": 7.32,
+    "yPosLeft": 84.6667,
+    "yPosRight": 70.3333
+  },
+  {
+    "country": "Faroe Islands",
+    "continent": "Europe",
+    "iso2": "fo",
+    "y1960": 72.02,
+    "y2020": 79.98,
+    "gain": 7.96,
+    "yPosLeft": 84.3333,
+    "yPosRight": 71.3333
+  },
+  {
+    "country": "Monaco",
+    "continent": "Europe",
+    "iso2": "mc",
+    "y1960": 71.86,
+    "y2020": 86.09,
+    "gain": 14.23,
+    "yPosLeft": 84.0,
+    "yPosRight": 87.0
+  },
+  {
+    "country": "Switzerland",
+    "continent": "Europe",
+    "iso2": "ch",
+    "y1960": 71.41,
+    "y2020": 83.06,
+    "gain": 11.65,
+    "yPosLeft": 83.6667,
+    "yPosRight": 83.3333
+  },
+  {
+    "country": "New Zealand",
+    "continent": "Oceania",
+    "iso2": "nz",
+    "y1960": 71.22,
+    "y2020": 82.66,
+    "gain": 11.44,
+    "yPosLeft": 83.3333,
+    "yPosRight": 82.3333
+  },
+  {
+    "country": "United Kingdom",
+    "continent": "Europe",
+    "iso2": "gb",
+    "y1960": 71.03,
+    "y2020": 80.39,
+    "gain": 9.36,
+    "yPosLeft": 83.0,
+    "yPosRight": 73.0
+  },
+  {
+    "country": "Canada",
+    "continent": "Americas",
+    "iso2": "ca",
+    "y1960": 70.97,
+    "y2020": 81.65,
+    "gain": 10.68,
+    "yPosLeft": 82.6667,
+    "yPosRight": 77.6667
+  },
+  {
+    "country": "Liechtenstein",
+    "continent": "Europe",
+    "iso2": "li",
+    "y1960": 70.9,
+    "y2020": 82.04,
+    "gain": 11.14,
+    "yPosLeft": 82.3333,
+    "yPosRight": 79.0
+  },
+  {
+    "country": "Australia",
+    "continent": "Oceania",
+    "iso2": "au",
+    "y1960": 70.87,
+    "y2020": 83.66,
+    "gain": 12.8,
+    "yPosLeft": 82.0,
+    "yPosRight": 85.0
+  },
+  {
+    "country": "Greece",
+    "continent": "Europe",
+    "iso2": "gr",
+    "y1960": 70.52,
+    "y2020": 81.54,
+    "gain": 11.01,
+    "yPosLeft": 81.6667,
+    "yPosRight": 77.0
+  },
+  {
+    "country": "Jersey",
+    "continent": "Europe",
+    "iso2": "je",
+    "y1960": 70.49,
+    "y2020": 79.45,
+    "gain": 8.96,
+    "yPosLeft": 81.3333,
+    "yPosRight": 70.6667
+  },
+  {
+    "country": "Czechia",
+    "continent": "Europe",
+    "iso2": "cz",
+    "y1960": 70.45,
+    "y2020": 78.24,
+    "gain": 7.78,
+    "yPosLeft": 81.0,
+    "yPosRight": 67.0
+  },
+  {
+    "country": "France",
+    "continent": "Europe",
+    "iso2": "fr",
+    "y1960": 70.37,
+    "y2020": 82.2,
+    "gain": 11.83,
+    "yPosLeft": 80.6667,
+    "yPosRight": 79.6667
+  },
+  {
+    "country": "Slovakia",
+    "continent": "Europe",
+    "iso2": "sk",
+    "y1960": 70.34,
+    "y2020": 76.86,
+    "gain": 6.53,
+    "yPosLeft": 80.3333,
+    "yPosRight": 60.6667
+  },
+  {
+    "country": "Latvia",
+    "continent": "Europe",
+    "iso2": "lv",
+    "y1960": 70.33,
+    "y2020": 75.48,
+    "gain": 5.15,
+    "yPosLeft": 80.0,
+    "yPosRight": 55.0
+  },
+  {
+    "country": "Lithuania",
+    "continent": "Europe",
+    "iso2": "lt",
+    "y1960": 70.29,
+    "y2020": 75.1,
+    "gain": 4.82,
+    "yPosLeft": 79.6667,
+    "yPosRight": 53.6667
+  },
+  {
+    "country": "Gibraltar",
+    "continent": "Europe",
+    "iso2": "gi",
+    "y1960": 70.21,
+    "y2020": 83.07,
+    "gain": 12.86,
+    "yPosLeft": 79.3333,
+    "yPosRight": 83.6667
+  },
+  {
+    "country": "Ireland",
+    "continent": "Europe",
+    "iso2": "ie",
+    "y1960": 70.17,
+    "y2020": 82.39,
+    "gain": 12.22,
+    "yPosLeft": 79.0,
+    "yPosRight": 80.6667
+  },
+  {
+    "country": "United States",
+    "continent": "Americas",
+    "iso2": "us",
+    "y1960": 69.83,
+    "y2020": 77.01,
+    "gain": 7.18,
+    "yPosLeft": 78.6667,
+    "yPosRight": 62.0
+  },
+  {
+    "country": "Israel",
+    "continent": "Asia",
+    "iso2": "il",
+    "y1960": 69.75,
+    "y2020": 82.7,
+    "gain": 12.95,
+    "yPosLeft": 78.3333,
+    "yPosRight": 82.6667
+  },
+  {
+    "country": "Belgium",
+    "continent": "Europe",
+    "iso2": "be",
+    "y1960": 69.62,
+    "y2020": 80.8,
+    "gain": 11.17,
+    "yPosLeft": 78.0,
+    "yPosRight": 74.3333
+  },
+  {
+    "country": "Ukraine",
+    "continent": "Europe",
+    "iso2": "ua",
+    "y1960": 69.39,
+    "y2020": 73.28,
+    "gain": 3.9,
+    "yPosLeft": 77.6667,
+    "yPosRight": 47.3333
+  },
+  {
+    "country": "Estonia",
+    "continent": "Europe",
+    "iso2": "ee",
+    "y1960": 69.34,
+    "y2020": 78.89,
+    "gain": 9.56,
+    "yPosLeft": 77.3333,
+    "yPosRight": 69.3333
+  },
+  {
+    "country": "Belarus",
+    "continent": "Europe",
+    "iso2": "by",
+    "y1960": 69.32,
+    "y2020": 72.27,
+    "gain": 2.95,
+    "yPosLeft": 77.0,
+    "yPosRight": 42.6667
+  },
+  {
+    "country": "Germany",
+    "continent": "Europe",
+    "iso2": "de",
+    "y1960": 69.25,
+    "y2020": 81.0,
+    "gain": 11.75,
+    "yPosLeft": 76.6667,
+    "yPosRight": 74.6667
+  },
+  {
+    "country": "Italy",
+    "continent": "Europe",
+    "iso2": "it",
+    "y1960": 69.21,
+    "y2020": 82.18,
+    "gain": 12.97,
+    "yPosLeft": 76.3333,
+    "yPosRight": 79.3333
+  },
+  {
+    "country": "Spain",
+    "continent": "Europe",
+    "iso2": "es",
+    "y1960": 69.21,
+    "y2020": 82.24,
+    "gain": 13.03,
+    "yPosLeft": 76.0,
+    "yPosRight": 80.0
+  },
+  {
+    "country": "Bulgaria",
+    "continent": "Europe",
+    "iso2": "bg",
+    "y1960": 69.18,
+    "y2020": 73.6,
+    "gain": 4.42,
+    "yPosLeft": 75.6667,
+    "yPosRight": 48.0
+  },
+  {
+    "country": "Finland",
+    "continent": "Europe",
+    "iso2": "fi",
+    "y1960": 68.99,
+    "y2020": 81.82,
+    "gain": 12.83,
+    "yPosLeft": 75.3333,
+    "yPosRight": 78.3333
+  },
+  {
+    "country": "Luxembourg",
+    "continent": "Europe",
+    "iso2": "lu",
+    "y1960": 68.78,
+    "y2020": 81.41,
+    "gain": 12.63,
+    "yPosLeft": 75.0,
+    "yPosRight": 76.3333
+  },
+  {
+    "country": "Austria",
+    "continent": "Europe",
+    "iso2": "at",
+    "y1960": 68.75,
+    "y2020": 81.8,
+    "gain": 13.06,
+    "yPosLeft": 74.6667,
+    "yPosRight": 78.0
+  },
+  {
+    "country": "Puerto Rico",
+    "continent": "Americas",
+    "iso2": "pr",
+    "y1960": 68.63,
+    "y2020": 80.01,
+    "gain": 11.38,
+    "yPosLeft": 74.3333,
+    "yPosRight": 71.6667
+  },
+  {
+    "country": "Slovenia",
+    "continent": "Europe",
+    "iso2": "si",
+    "y1960": 68.53,
+    "y2020": 80.36,
+    "gain": 11.83,
+    "yPosLeft": 74.0,
+    "yPosRight": 72.6667
+  },
+  {
+    "country": "Bonaire Sint Eustatius and Saba",
+    "continent": "Americas",
+    "iso2": "bq",
+    "y1960": 68.52,
+    "y2020": 77.21,
+    "gain": 8.7,
+    "yPosLeft": 73.6667,
+    "yPosRight": 63.0
+  },
+  {
+    "country": "Malta",
+    "continent": "Europe",
+    "iso2": "mt",
+    "y1960": 68.44,
+    "y2020": 82.34,
+    "gain": 13.89,
+    "yPosLeft": 73.3333,
+    "yPosRight": 80.3333
+  },
+  {
+    "country": "Russia",
+    "continent": "Europe",
+    "iso2": "ru",
+    "y1960": 68.31,
+    "y2020": 71.17,
+    "gain": 2.86,
+    "yPosLeft": 73.0,
+    "yPosRight": 39.0
+  },
+  {
+    "country": "Hungary",
+    "continent": "Europe",
+    "iso2": "hu",
+    "y1960": 68.09,
+    "y2020": 75.73,
+    "gain": 7.64,
+    "yPosLeft": 72.6667,
+    "yPosRight": 56.3333
+  },
+  {
+    "country": "Saint Helena",
+    "continent": "Africa",
+    "iso2": "sh",
+    "y1960": 67.73,
+    "y2020": 76.89,
+    "gain": 9.16,
+    "yPosLeft": 72.3333,
+    "yPosRight": 61.3333
+  },
+  {
+    "country": "Japan",
+    "continent": "Asia",
+    "iso2": "jp",
+    "y1960": 67.72,
+    "y2020": 84.67,
+    "gain": 16.95,
+    "yPosLeft": 72.0,
+    "yPosRight": 86.3333
+  },
+  {
+    "country": "Uruguay",
+    "continent": "Americas",
+    "iso2": "uy",
+    "y1960": 67.68,
+    "y2020": 78.38,
+    "gain": 10.7,
+    "yPosLeft": 71.6667,
+    "yPosRight": 67.6667
+  },
+  {
+    "country": "Saint Martin (French part)",
+    "continent": "Americas",
+    "iso2": "mf",
+    "y1960": 67.65,
+    "y2020": 80.08,
+    "gain": 12.44,
+    "yPosLeft": 71.3333,
+    "yPosRight": 72.0
+  },
+  {
+    "country": "Poland",
+    "continent": "Europe",
+    "iso2": "pl",
+    "y1960": 67.08,
+    "y2020": 76.6,
+    "gain": 9.51,
+    "yPosLeft": 71.0,
+    "yPosRight": 59.3333
+  },
+  {
+    "country": "Bermuda",
+    "continent": "Americas",
+    "iso2": "bm",
+    "y1960": 66.48,
+    "y2020": 81.46,
+    "gain": 14.97,
+    "yPosLeft": 70.6667,
+    "yPosRight": 76.6667
+  },
+  {
+    "country": "Saint Pierre and Miquelon",
+    "continent": "Americas",
+    "iso2": "pm",
+    "y1960": 66.26,
+    "y2020": 76.62,
+    "gain": 10.36,
+    "yPosLeft": 70.3333,
+    "yPosRight": 60.0
+  },
+  {
+    "country": "Hong Kong",
+    "continent": "Asia",
+    "iso2": "hk",
+    "y1960": 66.15,
+    "y2020": 84.71,
+    "gain": 18.56,
+    "yPosLeft": 70.0,
+    "yPosRight": 86.6667
+  },
+  {
+    "country": "Croatia",
+    "continent": "Europe",
+    "iso2": "hr",
+    "y1960": 65.95,
+    "y2020": 77.5,
+    "gain": 11.55,
+    "yPosLeft": 69.6667,
+    "yPosRight": 64.3333
+  },
+  {
+    "country": "Serbia",
+    "continent": "Europe",
+    "iso2": "rs",
+    "y1960": 65.71,
+    "y2020": 74.51,
+    "gain": 8.8,
+    "yPosLeft": 69.3333,
+    "yPosRight": 51.3333
+  },
+  {
+    "country": "Montenegro",
+    "continent": "Europe",
+    "iso2": "me",
+    "y1960": 65.68,
+    "y2020": 75.85,
+    "gain": 10.17,
+    "yPosLeft": 69.0,
+    "yPosRight": 56.6667
+  },
+  {
+    "country": "Romania",
+    "continent": "Europe",
+    "iso2": "ro",
+    "y1960": 65.61,
+    "y2020": 74.05,
+    "gain": 8.44,
+    "yPosLeft": 68.6667,
+    "yPosRight": 49.0
+  },
+  {
+    "country": "Curacao",
+    "continent": "Americas",
+    "iso2": "cw",
+    "y1960": 65.41,
+    "y2020": 76.5,
+    "gain": 11.09,
+    "yPosLeft": 68.3333,
+    "yPosRight": 58.6667
+  },
+  {
+    "country": "Singapore",
+    "continent": "Asia",
+    "iso2": "sg",
+    "y1960": 65.3,
+    "y2020": 83.66,
+    "gain": 18.36,
+    "yPosLeft": 68.0,
+    "yPosRight": 84.6667
+  },
+  {
+    "country": "American Samoa",
+    "continent": "Oceania",
+    "iso2": "as",
+    "y1960": 65.05,
+    "y2020": 72.67,
+    "gain": 7.62,
+    "yPosLeft": 67.6667,
+    "yPosRight": 45.3333
+  },
+  {
+    "country": "Isle of Man",
+    "continent": "Europe",
+    "iso2": "im",
+    "y1960": 64.56,
+    "y2020": 80.59,
+    "gain": 16.03,
+    "yPosLeft": 67.3333,
+    "yPosRight": 73.6667
+  },
+  {
+    "country": "Argentina",
+    "continent": "Americas",
+    "iso2": "ar",
+    "y1960": 64.24,
+    "y2020": 75.88,
+    "gain": 11.64,
+    "yPosLeft": 67.0,
+    "yPosRight": 57.0
+  },
+  {
+    "country": "Barbados",
+    "continent": "Americas",
+    "iso2": "bb",
+    "y1960": 64.15,
+    "y2020": 76.65,
+    "gain": 12.5,
+    "yPosLeft": 66.6667,
+    "yPosRight": 60.3333
+  },
+  {
+    "country": "Portugal",
+    "continent": "Europe",
+    "iso2": "pt",
+    "y1960": 64.15,
+    "y2020": 81.37,
+    "gain": 17.22,
+    "yPosLeft": 66.3333,
+    "yPosRight": 75.6667
+  },
+  {
+    "country": "Aruba",
+    "continent": "Americas",
+    "iso2": "aw",
+    "y1960": 64.05,
+    "y2020": 75.41,
+    "gain": 11.36,
+    "yPosLeft": 66.0,
+    "yPosRight": 54.6667
+  },
+  {
+    "country": "Macao",
+    "continent": "Asia",
+    "iso2": "mo",
+    "y1960": 63.94,
+    "y2020": 84.61,
+    "gain": 20.67,
+    "yPosLeft": 65.6667,
+    "yPosRight": 86.0
+  },
+  {
+    "country": "Lebanon",
+    "continent": "Asia",
+    "iso2": "lb",
+    "y1960": 63.93,
+    "y2020": 76.3,
+    "gain": 12.37,
+    "yPosLeft": 65.3333,
+    "yPosRight": 58.0
+  },
+  {
+    "country": "Jamaica",
+    "continent": "Americas",
+    "iso2": "jm",
+    "y1960": 63.83,
+    "y2020": 71.45,
+    "gain": 7.62,
+    "yPosLeft": 65.0,
+    "yPosRight": 40.6667
+  },
+  {
+    "country": "Costa Rica",
+    "continent": "Americas",
+    "iso2": "cr",
+    "y1960": 63.46,
+    "y2020": 79.73,
+    "gain": 16.26,
+    "yPosLeft": 64.6667,
+    "yPosRight": 71.0
+  },
+  {
+    "country": "Cyprus",
+    "continent": "Asia",
+    "iso2": "cy",
+    "y1960": 63.32,
+    "y2020": 81.23,
+    "gain": 17.91,
+    "yPosLeft": 64.3333,
+    "yPosRight": 75.3333
+  },
+  {
+    "country": "Cuba",
+    "continent": "Americas",
+    "iso2": "cu",
+    "y1960": 63.32,
+    "y2020": 77.41,
+    "gain": 14.09,
+    "yPosLeft": 64.0,
+    "yPosRight": 63.6667
+  },
+  {
+    "country": "Grenada",
+    "continent": "Americas",
+    "iso2": "gd",
+    "y1960": 63.14,
+    "y2020": 75.02,
+    "gain": 11.88,
+    "yPosLeft": 63.6667,
+    "yPosRight": 53.3333
+  },
+  {
+    "country": "Guam",
+    "continent": "Oceania",
+    "iso2": "gu",
+    "y1960": 62.88,
+    "y2020": 75.53,
+    "gain": 12.65,
+    "yPosLeft": 63.3333,
+    "yPosRight": 55.3333
+  },
+  {
+    "country": "British Virgin Islands",
+    "continent": "Americas",
+    "iso2": "vg",
+    "y1960": 62.71,
+    "y2020": 76.89,
+    "gain": 14.19,
+    "yPosLeft": 63.0,
+    "yPosRight": 61.0
+  },
+  {
+    "country": "United States Virgin Islands",
+    "continent": "Americas",
+    "iso2": "vi",
+    "y1960": 62.65,
+    "y2020": 74.71,
+    "gain": 12.06,
+    "yPosLeft": 62.6667,
+    "yPosRight": 52.0
+  },
+  {
+    "country": "Antigua and Barbuda",
+    "continent": "Americas",
+    "iso2": "ag",
+    "y1960": 62.64,
+    "y2020": 77.16,
+    "gain": 14.53,
+    "yPosLeft": 62.3333,
+    "yPosRight": 62.6667
+  },
+  {
+    "country": "Taiwan",
+    "continent": "Asia",
+    "iso2": "tw",
+    "y1960": 62.54,
+    "y2020": 81.11,
+    "gain": 18.56,
+    "yPosLeft": 62.0,
+    "yPosRight": 75.0
+  },
+  {
+    "country": "Trinidad and Tobago",
+    "continent": "Americas",
+    "iso2": "tt",
+    "y1960": 62.5,
+    "y2020": 72.64,
+    "gain": 10.14,
+    "yPosLeft": 61.6667,
+    "yPosRight": 45.0
+  },
+  {
+    "country": "Bahamas",
+    "continent": "Americas",
+    "iso2": "bs",
+    "y1960": 62.45,
+    "y2020": 72.99,
+    "gain": 10.54,
+    "yPosLeft": 61.3333,
+    "yPosRight": 46.3333
+  },
+  {
+    "country": "Martinique",
+    "continent": "Americas",
+    "iso2": "mq",
+    "y1960": 61.61,
+    "y2020": 80.27,
+    "gain": 18.66,
+    "yPosLeft": 61.0,
+    "yPosRight": 72.3333
+  },
+  {
+    "country": "Northern Mariana Islands",
+    "continent": "Oceania",
+    "iso2": "mp",
+    "y1960": 61.39,
+    "y2020": 78.03,
+    "gain": 16.64,
+    "yPosLeft": 60.6667,
+    "yPosRight": 66.3333
+  },
+  {
+    "country": "Georgia",
+    "continent": "Asia",
+    "iso2": "ge",
+    "y1960": 61.35,
+    "y2020": 73.51,
+    "gain": 12.16,
+    "yPosLeft": 60.3333,
+    "yPosRight": 47.6667
+  },
+  {
+    "country": "Guadeloupe",
+    "continent": "Americas",
+    "iso2": "gp",
+    "y1960": 61.06,
+    "y2020": 80.65,
+    "gain": 19.59,
+    "yPosLeft": 60.0,
+    "yPosRight": 74.0
+  },
+  {
+    "country": "Sri Lanka",
+    "continent": "Asia",
+    "iso2": "lk",
+    "y1960": 60.6,
+    "y2020": 76.93,
+    "gain": 16.33,
+    "yPosLeft": 59.6667,
+    "yPosRight": 61.6667
+  },
+  {
+    "country": "North Macedonia",
+    "continent": "Europe",
+    "iso2": "mk",
+    "y1960": 60.5,
+    "y2020": 74.47,
+    "gain": 13.96,
+    "yPosLeft": 59.3333,
+    "yPosRight": 50.3333
+  },
+  {
+    "country": "Seychelles",
+    "continent": "Africa",
+    "iso2": "sc",
+    "y1960": 60.49,
+    "y2020": 74.09,
+    "gain": 13.6,
+    "yPosLeft": 59.0,
+    "yPosRight": 49.3333
+  },
+  {
+    "country": "Panama",
+    "continent": "Americas",
+    "iso2": "pa",
+    "y1960": 60.28,
+    "y2020": 76.33,
+    "gain": 16.05,
+    "yPosLeft": 58.6667,
+    "yPosRight": 58.3333
+  },
+  {
+    "country": "Paraguay",
+    "continent": "Americas",
+    "iso2": "py",
+    "y1960": 60.2,
+    "y2020": 72.72,
+    "gain": 12.52,
+    "yPosLeft": 58.3333,
+    "yPosRight": 45.6667
+  },
+  {
+    "country": "Saint Barthelemy",
+    "continent": "Americas",
+    "iso2": "bl",
+    "y1960": 60.12,
+    "y2020": 84.07,
+    "gain": 23.95,
+    "yPosLeft": 58.0,
+    "yPosRight": 85.6667
+  },
+  {
+    "country": "Dominica",
+    "continent": "Americas",
+    "iso2": "dm",
+    "y1960": 60.08,
+    "y2020": 71.27,
+    "gain": 11.19,
+    "yPosLeft": 57.6667,
+    "yPosRight": 40.0
+  },
+  {
+    "country": "French Polynesia",
+    "continent": "Oceania",
+    "iso2": "pf",
+    "y1960": 59.44,
+    "y2020": 82.46,
+    "gain": 23.01,
+    "yPosLeft": 57.3333,
+    "yPosRight": 81.3333
+  },
+  {
+    "country": "Moldova",
+    "continent": "Europe",
+    "iso2": "md",
+    "y1960": 59.44,
+    "y2020": 69.91,
+    "gain": 10.47,
+    "yPosLeft": 57.0,
+    "yPosRight": 34.3333
+  },
+  {
+    "country": "Niue",
+    "continent": "Oceania",
+    "iso2": "nu",
+    "y1960": 59.38,
+    "y2020": 69.47,
+    "gain": 10.09,
+    "yPosLeft": 56.6667,
+    "yPosRight": 33.0
+  },
+  {
+    "country": "Philippines",
+    "continent": "Asia",
+    "iso2": "ph",
+    "y1960": 59.18,
+    "y2020": 70.1,
+    "gain": 10.92,
+    "yPosLeft": 56.3333,
+    "yPosRight": 35.6667
+  },
+  {
+    "country": "Armenia",
+    "continent": "Asia",
+    "iso2": "am",
+    "y1960": 59.13,
+    "y2020": 68.89,
+    "gain": 9.76,
+    "yPosLeft": 56.0,
+    "yPosRight": 31.6667
+  },
+  {
+    "country": "Kuwait",
+    "continent": "Asia",
+    "iso2": "kw",
+    "y1960": 58.92,
+    "y2020": 78.25,
+    "gain": 19.33,
+    "yPosLeft": 55.6667,
+    "yPosRight": 67.3333
+  },
+  {
+    "country": "Anguilla",
+    "continent": "Americas",
+    "iso2": "ai",
+    "y1960": 58.83,
+    "y2020": 78.66,
+    "gain": 19.82,
+    "yPosLeft": 55.3333,
+    "yPosRight": 68.0
+  },
+  {
+    "country": "Cayman Islands",
+    "continent": "Americas",
+    "iso2": "ky",
+    "y1960": 58.78,
+    "y2020": 79.23,
+    "gain": 20.45,
+    "yPosLeft": 55.0,
+    "yPosRight": 69.6667
+  },
+  {
+    "country": "Brunei",
+    "continent": "Asia",
+    "iso2": "bn",
+    "y1960": 58.72,
+    "y2020": 75.11,
+    "gain": 16.39,
+    "yPosLeft": 54.6667,
+    "yPosRight": 54.0
+  },
+  {
+    "country": "Montserrat",
+    "continent": "Americas",
+    "iso2": "ms",
+    "y1960": 58.64,
+    "y2020": 75.57,
+    "gain": 16.93,
+    "yPosLeft": 54.3333,
+    "yPosRight": 55.6667
+  },
+  {
+    "country": "Tokelau",
+    "continent": "Oceania",
+    "iso2": "tk",
+    "y1960": 58.6,
+    "y2020": 76.62,
+    "gain": 18.02,
+    "yPosLeft": 54.0,
+    "yPosRight": 59.6667
+  },
+  {
+    "country": "Fiji",
+    "continent": "Oceania",
+    "iso2": "fj",
+    "y1960": 58.6,
+    "y2020": 66.92,
+    "gain": 8.32,
+    "yPosLeft": 53.6667,
+    "yPosRight": 27.3333
+  },
+  {
+    "country": "Saint Vincent and the Grenadines",
+    "continent": "Americas",
+    "iso2": "vc",
+    "y1960": 58.57,
+    "y2020": 69.61,
+    "gain": 11.04,
+    "yPosLeft": 53.3333,
+    "yPosRight": 33.3333
+  },
+  {
+    "country": "Greenland",
+    "continent": "Americas",
+    "iso2": "gl",
+    "y1960": 58.55,
+    "y2020": 70.16,
+    "gain": 11.61,
+    "yPosLeft": 53.0,
+    "yPosRight": 36.3333
+  },
+  {
+    "country": "Bosnia and Herzegovina",
+    "continent": "Europe",
+    "iso2": "ba",
+    "y1960": 58.53,
+    "y2020": 76.04,
+    "gain": 17.51,
+    "yPosLeft": 52.6667,
+    "yPosRight": 57.3333
+  },
+  {
+    "country": "Mauritius",
+    "continent": "Africa",
+    "iso2": "mu",
+    "y1960": 58.4,
+    "y2020": 74.66,
+    "gain": 16.25,
+    "yPosLeft": 52.3333,
+    "yPosRight": 51.6667
+  },
+  {
+    "country": "Venezuela",
+    "continent": "Americas",
+    "iso2": "ve",
+    "y1960": 58.38,
+    "y2020": 72.37,
+    "gain": 13.99,
+    "yPosLeft": 52.0,
+    "yPosRight": 43.6667
+  },
+  {
+    "country": "Tonga",
+    "continent": "Oceania",
+    "iso2": "to",
+    "y1960": 58.31,
+    "y2020": 72.38,
+    "gain": 14.06,
+    "yPosLeft": 51.6667,
+    "yPosRight": 44.0
+  },
+  {
+    "country": "Vietnam",
+    "continent": "Asia",
+    "iso2": "vn",
+    "y1960": 58.05,
+    "y2020": 75.38,
+    "gain": 17.34,
+    "yPosLeft": 51.3333,
+    "yPosRight": 54.3333
+  },
+  {
+    "country": "Kazakhstan",
+    "continent": "Asia",
+    "iso2": "kz",
+    "y1960": 57.95,
+    "y2020": 71.2,
+    "gain": 13.25,
+    "yPosLeft": 51.0,
+    "yPosRight": 39.6667
+  },
+  {
+    "country": "Nauru",
+    "continent": "Oceania",
+    "iso2": "nr",
+    "y1960": 57.92,
+    "y2020": 61.53,
+    "gain": 3.6,
+    "yPosLeft": 50.6667,
+    "yPosRight": 17.0
+  },
+  {
+    "country": "Saint Lucia",
+    "continent": "Americas",
+    "iso2": "lc",
+    "y1960": 57.86,
+    "y2020": 72.31,
+    "gain": 14.44,
+    "yPosLeft": 50.3333,
+    "yPosRight": 43.0
+  },
+  {
+    "country": "Qatar",
+    "continent": "Asia",
+    "iso2": "qa",
+    "y1960": 57.77,
+    "y2020": 80.41,
+    "gain": 22.64,
+    "yPosLeft": 50.0,
+    "yPosRight": 73.3333
+  },
+  {
+    "country": "Reunion",
+    "continent": "Africa",
+    "iso2": "re",
+    "y1960": 57.66,
+    "y2020": 82.58,
+    "gain": 24.91,
+    "yPosLeft": 49.6667,
+    "yPosRight": 81.6667
+  },
+  {
+    "country": "Guyana",
+    "continent": "Americas",
+    "iso2": "gy",
+    "y1960": 57.51,
+    "y2020": 67.75,
+    "gain": 10.24,
+    "yPosLeft": 49.3333,
+    "yPosRight": 29.3333
+  },
+  {
+    "country": "Belize",
+    "continent": "Americas",
+    "iso2": "bz",
+    "y1960": 57.39,
+    "y2020": 71.58,
+    "gain": 14.19,
+    "yPosLeft": 49.0,
+    "yPosRight": 41.3333
+  },
+  {
+    "country": "Chile",
+    "continent": "Americas",
+    "iso2": "cl",
+    "y1960": 57.22,
+    "y2020": 79.35,
+    "gain": 22.13,
+    "yPosLeft": 48.6667,
+    "yPosRight": 70.0
+  },
+  {
+    "country": "Malaysia",
+    "continent": "Asia",
+    "iso2": "my",
+    "y1960": 57.17,
+    "y2020": 76.06,
+    "gain": 18.89,
+    "yPosLeft": 48.3333,
+    "yPosRight": 57.6667
+  },
+  {
+    "country": "Saint Kitts and Nevis",
+    "continent": "Americas",
+    "iso2": "kn",
+    "y1960": 56.84,
+    "y2020": 71.18,
+    "gain": 14.34,
+    "yPosLeft": 48.0,
+    "yPosRight": 39.3333
+  },
+  {
+    "country": "Colombia",
+    "continent": "Americas",
+    "iso2": "co",
+    "y1960": 56.61,
+    "y2020": 74.76,
+    "gain": 18.15,
+    "yPosLeft": 47.6667,
+    "yPosRight": 52.3333
+  },
+  {
+    "country": "Suriname",
+    "continent": "Americas",
+    "iso2": "sr",
+    "y1960": 56.6,
+    "y2020": 72.32,
+    "gain": 15.73,
+    "yPosLeft": 47.3333,
+    "yPosRight": 43.3333
+  },
+  {
+    "country": "Uzbekistan",
+    "continent": "Asia",
+    "iso2": "uz",
+    "y1960": 56.54,
+    "y2020": 71.46,
+    "gain": 14.92,
+    "yPosLeft": 47.0,
+    "yPosRight": 41.0
+  },
+  {
+    "country": "Albania",
+    "continent": "Europe",
+    "iso2": "al",
+    "y1960": 56.41,
+    "y2020": 77.82,
+    "gain": 21.41,
+    "yPosLeft": 46.6667,
+    "yPosRight": 65.6667
+  },
+  {
+    "country": "Turks and Caicos Islands",
+    "continent": "Americas",
+    "iso2": "tc",
+    "y1960": 56.29,
+    "y2020": 77.5,
+    "gain": 21.21,
+    "yPosLeft": 46.3333,
+    "yPosRight": 64.0
+  },
+  {
+    "country": "French Guiana",
+    "continent": "Americas",
+    "iso2": "gf",
+    "y1960": 55.82,
+    "y2020": 77.51,
+    "gain": 21.69,
+    "yPosLeft": 46.0,
+    "yPosRight": 64.6667
+  },
+  {
+    "country": "North Korea",
+    "continent": "Asia",
+    "iso2": "kp",
+    "y1960": 55.81,
+    "y2020": 72.78,
+    "gain": 16.97,
+    "yPosLeft": 45.6667,
+    "yPosRight": 46.0
+  },
+  {
+    "country": "Samoa",
+    "continent": "Oceania",
+    "iso2": "ws",
+    "y1960": 55.15,
+    "y2020": 70.73,
+    "gain": 15.57,
+    "yPosLeft": 45.3333,
+    "yPosRight": 38.0
+  },
+  {
+    "country": "Kyrgyzstan",
+    "continent": "Asia",
+    "iso2": "kg",
+    "y1960": 55.09,
+    "y2020": 69.14,
+    "gain": 14.04,
+    "yPosLeft": 45.0,
+    "yPosRight": 32.3333
+  },
+  {
+    "country": "Palau",
+    "continent": "Oceania",
+    "iso2": "pw",
+    "y1960": 54.85,
+    "y2020": 68.69,
+    "gain": 13.84,
+    "yPosLeft": 44.6667,
+    "yPosRight": 30.6667
+  },
+  {
+    "country": "Marshall Islands",
+    "continent": "Oceania",
+    "iso2": "mh",
+    "y1960": 54.36,
+    "y2020": 65.39,
+    "gain": 11.03,
+    "yPosLeft": 44.3333,
+    "yPosRight": 23.6667
+  },
+  {
+    "country": "Mayotte",
+    "continent": "Africa",
+    "iso2": "yt",
+    "y1960": 54.36,
+    "y2020": 74.21,
+    "gain": 19.85,
+    "yPosLeft": 44.0,
+    "yPosRight": 50.0
+  },
+  {
+    "country": "Micronesia (country)",
+    "continent": "Oceania",
+    "iso2": "fm",
+    "y1960": 54.19,
+    "y2020": 65.88,
+    "gain": 11.68,
+    "yPosLeft": 43.6667,
+    "yPosRight": 24.6667
+  },
+  {
+    "country": "South Korea",
+    "continent": "Asia",
+    "iso2": "kr",
+    "y1960": 53.76,
+    "y2020": 83.68,
+    "gain": 29.92,
+    "yPosLeft": 43.3333,
+    "yPosRight": 85.3333
+  },
+  {
+    "country": "Mexico",
+    "continent": "Americas",
+    "iso2": "mx",
+    "y1960": 53.57,
+    "y2020": 70.45,
+    "gain": 16.88,
+    "yPosLeft": 43.0,
+    "yPosRight": 37.6667
+  },
+  {
+    "country": "Falkland Islands",
+    "continent": "Americas",
+    "iso2": "fk",
+    "y1960": 53.54,
+    "y2020": 78.78,
+    "gain": 25.24,
+    "yPosLeft": 42.6667,
+    "yPosRight": 69.0
+  },
+  {
+    "country": "Zimbabwe",
+    "continent": "Africa",
+    "iso2": "zw",
+    "y1960": 53.49,
+    "y2020": 61.53,
+    "gain": 8.04,
+    "yPosLeft": 42.3333,
+    "yPosRight": 16.6667
+  },
+  {
+    "country": "Ecuador",
+    "continent": "Americas",
+    "iso2": "ec",
+    "y1960": 53.4,
+    "y2020": 72.0,
+    "gain": 18.61,
+    "yPosLeft": 42.0,
+    "yPosRight": 42.0
+  },
+  {
+    "country": "Brazil",
+    "continent": "Americas",
+    "iso2": "br",
+    "y1960": 53.16,
+    "y2020": 74.51,
+    "gain": 21.34,
+    "yPosLeft": 41.6667,
+    "yPosRight": 51.0
+  },
+  {
+    "country": "Cook Islands",
+    "continent": "Oceania",
+    "iso2": "ck",
+    "y1960": 52.73,
+    "y2020": 74.51,
+    "gain": 21.79,
+    "yPosLeft": 41.3333,
+    "yPosRight": 50.6667
+  },
+  {
+    "country": "Syria",
+    "continent": "Asia",
+    "iso2": "sy",
+    "y1960": 52.72,
+    "y2020": 71.94,
+    "gain": 19.22,
+    "yPosLeft": 41.0,
+    "yPosRight": 41.6667
+  },
+  {
+    "country": "Jordan",
+    "continent": "Asia",
+    "iso2": "jo",
+    "y1960": 52.68,
+    "y2020": 75.58,
+    "gain": 22.91,
+    "yPosLeft": 40.6667,
+    "yPosRight": 56.0
+  },
+  {
+    "country": "South Africa",
+    "continent": "Africa",
+    "iso2": "za",
+    "y1960": 52.58,
+    "y2020": 65.15,
+    "gain": 12.58,
+    "yPosLeft": 40.3333,
+    "yPosRight": 22.6667
+  },
+  {
+    "country": "Tajikistan",
+    "continent": "Asia",
+    "iso2": "tj",
+    "y1960": 52.53,
+    "y2020": 68.61,
+    "gain": 16.07,
+    "yPosLeft": 40.0,
+    "yPosRight": 30.3333
+  },
+  {
+    "country": "New Caledonia",
+    "continent": "Oceania",
+    "iso2": "nc",
+    "y1960": 52.34,
+    "y2020": 77.05,
+    "gain": 24.71,
+    "yPosLeft": 39.6667,
+    "yPosRight": 62.3333
+  },
+  {
+    "country": "Turkmenistan",
+    "continent": "Asia",
+    "iso2": "tm",
+    "y1960": 52.15,
+    "y2020": 68.85,
+    "gain": 16.7,
+    "yPosLeft": 39.3333,
+    "yPosRight": 31.3333
+  },
+  {
+    "country": "Dominican Republic",
+    "continent": "Americas",
+    "iso2": "do",
+    "y1960": 51.7,
+    "y2020": 72.64,
+    "gain": 20.93,
+    "yPosLeft": 39.0,
+    "yPosRight": 44.6667
+  },
+  {
+    "country": "Iraq",
+    "continent": "Asia",
+    "iso2": "iq",
+    "y1960": 51.46,
+    "y2020": 69.65,
+    "gain": 18.19,
+    "yPosLeft": 38.6667,
+    "yPosRight": 33.6667
+  },
+  {
+    "country": "Botswana",
+    "continent": "Africa",
+    "iso2": "bw",
+    "y1960": 51.22,
+    "y2020": 67.64,
+    "gain": 16.42,
+    "yPosLeft": 38.3333,
+    "yPosRight": 29.0
+  },
+  {
+    "country": "Azerbaijan",
+    "continent": "Asia",
+    "iso2": "az",
+    "y1960": 50.86,
+    "y2020": 70.31,
+    "gain": 19.45,
+    "yPosLeft": 38.0,
+    "yPosRight": 37.0
+  },
+  {
+    "country": "Turkey",
+    "continent": "Asia",
+    "iso2": "tr",
+    "y1960": 50.8,
+    "y2020": 76.53,
+    "gain": 25.73,
+    "yPosLeft": 37.6667,
+    "yPosRight": 59.0
+  },
+  {
+    "country": "United Arab Emirates",
+    "continent": "Asia",
+    "iso2": "ae",
+    "y1960": 50.65,
+    "y2020": 81.94,
+    "gain": 31.29,
+    "yPosLeft": 37.3333,
+    "yPosRight": 78.6667
+  },
+  {
+    "country": "Zambia",
+    "continent": "Africa",
+    "iso2": "zm",
+    "y1960": 50.65,
+    "y2020": 63.36,
+    "gain": 12.71,
+    "yPosLeft": 37.0,
+    "yPosRight": 19.6667
+  },
+  {
+    "country": "Bahrain",
+    "continent": "Asia",
+    "iso2": "bh",
+    "y1960": 50.63,
+    "y2020": 78.68,
+    "gain": 28.05,
+    "yPosLeft": 36.6667,
+    "yPosRight": 68.3333
+  },
+  {
+    "country": "Thailand",
+    "continent": "Asia",
+    "iso2": "th",
+    "y1960": 50.61,
+    "y2020": 77.33,
+    "gain": 26.72,
+    "yPosLeft": 36.3333,
+    "yPosRight": 63.3333
+  },
+  {
+    "country": "Peru",
+    "continent": "Americas",
+    "iso2": "pe",
+    "y1960": 50.6,
+    "y2020": 73.83,
+    "gain": 23.23,
+    "yPosLeft": 36.0,
+    "yPosRight": 48.6667
+  },
+  {
+    "country": "Lesotho",
+    "continent": "Africa",
+    "iso2": "ls",
+    "y1960": 50.17,
+    "y2020": 55.13,
+    "gain": 4.96,
+    "yPosLeft": 35.6667,
+    "yPosRight": 11.0
+  },
+  {
+    "country": "Vanuatu",
+    "continent": "Oceania",
+    "iso2": "vu",
+    "y1960": 49.84,
+    "y2020": 70.38,
+    "gain": 20.54,
+    "yPosLeft": 35.3333,
+    "yPosRight": 37.3333
+  },
+  {
+    "country": "Sudan",
+    "continent": "Africa",
+    "iso2": "sd",
+    "y1960": 49.57,
+    "y2020": 65.12,
+    "gain": 15.56,
+    "yPosLeft": 35.0,
+    "yPosRight": 22.3333
+  },
+  {
+    "country": "Palestine",
+    "continent": "Asia",
+    "iso2": "ps",
+    "y1960": 49.3,
+    "y2020": 75.0,
+    "gain": 25.7,
+    "yPosLeft": 34.6667,
+    "yPosRight": 53.0
+  },
+  {
+    "country": "Cape Verde",
+    "continent": "Africa",
+    "iso2": "cv",
+    "y1960": 48.71,
+    "y2020": 73.82,
+    "gain": 25.11,
+    "yPosLeft": 34.3333,
+    "yPosRight": 48.3333
+  },
+  {
+    "country": "Namibia",
+    "continent": "Africa",
+    "iso2": "na",
+    "y1960": 48.53,
+    "y2020": 64.07,
+    "gain": 15.54,
+    "yPosLeft": 34.0,
+    "yPosRight": 20.3333
+  },
+  {
+    "country": "Kenya",
+    "continent": "Africa",
+    "iso2": "ke",
+    "y1960": 48.48,
+    "y2020": 61.6,
+    "gain": 13.12,
+    "yPosLeft": 33.6667,
+    "yPosRight": 17.3333
+  },
+  {
+    "country": "El Salvador",
+    "continent": "Americas",
+    "iso2": "sv",
+    "y1960": 48.29,
+    "y2020": 70.24,
+    "gain": 21.95,
+    "yPosLeft": 33.3333,
+    "yPosRight": 36.6667
+  },
+  {
+    "country": "Tuvalu",
+    "continent": "Oceania",
+    "iso2": "tv",
+    "y1960": 48.26,
+    "y2020": 66.36,
+    "gain": 18.1,
+    "yPosLeft": 33.0,
+    "yPosRight": 25.3333
+  },
+  {
+    "country": "Kiribati",
+    "continent": "Oceania",
+    "iso2": "ki",
+    "y1960": 47.96,
+    "y2020": 65.2,
+    "gain": 17.25,
+    "yPosLeft": 32.6667,
+    "yPosRight": 23.0
+  },
+  {
+    "country": "Solomon Islands",
+    "continent": "Oceania",
+    "iso2": "sb",
+    "y1960": 47.68,
+    "y2020": 69.26,
+    "gain": 21.57,
+    "yPosLeft": 32.3333,
+    "yPosRight": 32.6667
+  },
+  {
+    "country": "Congo",
+    "continent": "Africa",
+    "iso2": "cg",
+    "y1960": 47.59,
+    "y2020": 64.39,
+    "gain": 16.8,
+    "yPosLeft": 32.0,
+    "yPosRight": 21.3333
+  },
+  {
+    "country": "Wallis and Futuna",
+    "continent": "Oceania",
+    "iso2": "wf",
+    "y1960": 47.29,
+    "y2020": 78.16,
+    "gain": 30.88,
+    "yPosLeft": 31.6667,
+    "yPosRight": 66.6667
+  },
+  {
+    "country": "Honduras",
+    "continent": "Americas",
+    "iso2": "hn",
+    "y1960": 47.15,
+    "y2020": 70.86,
+    "gain": 23.71,
+    "yPosLeft": 31.3333,
+    "yPosRight": 38.6667
+  },
+  {
+    "country": "Rwanda",
+    "continent": "Africa",
+    "iso2": "rw",
+    "y1960": 47.02,
+    "y2020": 66.95,
+    "gain": 19.93,
+    "yPosLeft": 31.0,
+    "yPosRight": 27.6667
+  },
+  {
+    "country": "Ghana",
+    "continent": "Africa",
+    "iso2": "gh",
+    "y1960": 46.94,
+    "y2020": 64.31,
+    "gain": 17.37,
+    "yPosLeft": 30.6667,
+    "yPosRight": 21.0
+  },
+  {
+    "country": "Indonesia",
+    "continent": "Asia",
+    "iso2": "id",
+    "y1960": 46.83,
+    "y2020": 68.82,
+    "gain": 21.98,
+    "yPosLeft": 30.3333,
+    "yPosRight": 31.0
+  },
+  {
+    "country": "Gabon",
+    "continent": "Africa",
+    "iso2": "ga",
+    "y1960": 46.44,
+    "y2020": 67.07,
+    "gain": 20.63,
+    "yPosLeft": 30.0,
+    "yPosRight": 28.3333
+  },
+  {
+    "country": "Nicaragua",
+    "continent": "Americas",
+    "iso2": "ni",
+    "y1960": 46.4,
+    "y2020": 70.77,
+    "gain": 24.37,
+    "yPosLeft": 29.6667,
+    "yPosRight": 38.3333
+  },
+  {
+    "country": "Eswatini",
+    "continent": "Africa",
+    "iso2": "sz",
+    "y1960": 46.39,
+    "y2020": 59.86,
+    "gain": 13.47,
+    "yPosLeft": 29.3333,
+    "yPosRight": 13.0
+  },
+  {
+    "country": "Papua New Guinea",
+    "continent": "Oceania",
+    "iso2": "pg",
+    "y1960": 45.8,
+    "y2020": 65.08,
+    "gain": 19.27,
+    "yPosLeft": 29.0,
+    "yPosRight": 22.0
+  },
+  {
+    "country": "Guatemala",
+    "continent": "Americas",
+    "iso2": "gt",
+    "y1960": 45.76,
+    "y2020": 69.97,
+    "gain": 24.21,
+    "yPosLeft": 28.6667,
+    "yPosRight": 34.6667
+  },
+  {
+    "country": "Uganda",
+    "continent": "Africa",
+    "iso2": "ug",
+    "y1960": 45.63,
+    "y2020": 66.41,
+    "gain": 20.78,
+    "yPosLeft": 28.3333,
+    "yPosRight": 25.6667
+  },
+  {
+    "country": "India",
+    "continent": "Asia",
+    "iso2": "in",
+    "y1960": 45.61,
+    "y2020": 70.16,
+    "gain": 24.55,
+    "yPosLeft": 28.0,
+    "yPosRight": 36.0
+  },
+  {
+    "country": "Saudi Arabia",
+    "continent": "Asia",
+    "iso2": "sa",
+    "y1960": 45.31,
+    "y2020": 77.6,
+    "gain": 32.29,
+    "yPosLeft": 27.6667,
+    "yPosRight": 65.0
+  },
+  {
+    "country": "Mongolia",
+    "continent": "Asia",
+    "iso2": "mn",
+    "y1960": 44.54,
+    "y2020": 70.03,
+    "gain": 25.49,
+    "yPosLeft": 27.3333,
+    "yPosRight": 35.0
+  },
+  {
+    "country": "Egypt",
+    "continent": "Africa",
+    "iso2": "eg",
+    "y1960": 44.44,
+    "y2020": 69.79,
+    "gain": 25.35,
+    "yPosLeft": 27.0,
+    "yPosRight": 34.0
+  },
+  {
+    "country": "Pakistan",
+    "continent": "Asia",
+    "iso2": "pk",
+    "y1960": 44.1,
+    "y2020": 65.7,
+    "gain": 21.6,
+    "yPosLeft": 26.6667,
+    "yPosRight": 24.0
+  },
+  {
+    "country": "Myanmar",
+    "continent": "Asia",
+    "iso2": "mm",
+    "y1960": 44.09,
+    "y2020": 66.61,
+    "gain": 22.53,
+    "yPosLeft": 26.3333,
+    "yPosRight": 26.3333
+  },
+  {
+    "country": "Tunisia",
+    "continent": "Africa",
+    "iso2": "tn",
+    "y1960": 44.05,
+    "y2020": 75.0,
+    "gain": 30.95,
+    "yPosLeft": 26.0,
+    "yPosRight": 52.6667
+  },
+  {
+    "country": "Bangladesh",
+    "continent": "Asia",
+    "iso2": "bd",
+    "y1960": 43.98,
+    "y2020": 71.42,
+    "gain": 27.44,
+    "yPosLeft": 25.6667,
+    "yPosRight": 40.3333
+  },
+  {
+    "country": "Mauritania",
+    "continent": "Africa",
+    "iso2": "mr",
+    "y1960": 43.61,
+    "y2020": 66.79,
+    "gain": 23.18,
+    "yPosLeft": 25.3333,
+    "yPosRight": 27.0
+  },
+  {
+    "country": "Sao Tome and Principe",
+    "continent": "Africa",
+    "iso2": "st",
+    "y1960": 43.56,
+    "y2020": 67.98,
+    "gain": 24.42,
+    "yPosLeft": 25.0,
+    "yPosRight": 29.6667
+  },
+  {
+    "country": "Somalia",
+    "continent": "Africa",
+    "iso2": "so",
+    "y1960": 43.54,
+    "y2020": 57.09,
+    "gain": 13.55,
+    "yPosLeft": 24.6667,
+    "yPosRight": 11.3333
+  },
+  {
+    "country": "Togo",
+    "continent": "Africa",
+    "iso2": "tg",
+    "y1960": 43.54,
+    "y2020": 61.12,
+    "gain": 17.59,
+    "yPosLeft": 24.3333,
+    "yPosRight": 15.0
+  },
+  {
+    "country": "Haiti",
+    "continent": "Americas",
+    "iso2": "ht",
+    "y1960": 43.44,
+    "y2020": 63.77,
+    "gain": 20.33,
+    "yPosLeft": 24.0,
+    "yPosRight": 20.0
+  },
+  {
+    "country": "Djibouti",
+    "continent": "Africa",
+    "iso2": "dj",
+    "y1960": 43.42,
+    "y2020": 64.2,
+    "gain": 20.78,
+    "yPosLeft": 23.6667,
+    "yPosRight": 20.6667
+  },
+  {
+    "country": "Madagascar",
+    "continent": "Africa",
+    "iso2": "mg",
+    "y1960": 43.35,
+    "y2020": 62.71,
+    "gain": 19.36,
+    "yPosLeft": 23.3333,
+    "yPosRight": 18.6667
+  },
+  {
+    "country": "Bolivia",
+    "continent": "Americas",
+    "iso2": "bo",
+    "y1960": 43.34,
+    "y2020": 62.91,
+    "gain": 19.57,
+    "yPosLeft": 23.0,
+    "yPosRight": 19.0
+  },
+  {
+    "country": "Iran",
+    "continent": "Asia",
+    "iso2": "ir",
+    "y1960": 43.3,
+    "y2020": 74.14,
+    "gain": 30.84,
+    "yPosLeft": 22.6667,
+    "yPosRight": 49.6667
+  },
+  {
+    "country": "Burundi",
+    "continent": "Africa",
+    "iso2": "bi",
+    "y1960": 43.26,
+    "y2020": 62.57,
+    "gain": 19.31,
+    "yPosLeft": 22.3333,
+    "yPosRight": 18.3333
+  },
+  {
+    "country": "Equatorial Guinea",
+    "continent": "Africa",
+    "iso2": "gq",
+    "y1960": 42.74,
+    "y2020": 62.14,
+    "gain": 19.4,
+    "yPosLeft": 22.0,
+    "yPosRight": 18.0
+  },
+  {
+    "country": "Tanzania",
+    "continent": "Africa",
+    "iso2": "tz",
+    "y1960": 42.6,
+    "y2020": 66.77,
+    "gain": 24.18,
+    "yPosLeft": 21.6667,
+    "yPosRight": 26.6667
+  },
+  {
+    "country": "Cambodia",
+    "continent": "Asia",
+    "iso2": "kh",
+    "y1960": 42.13,
+    "y2020": 70.06,
+    "gain": 27.93,
+    "yPosLeft": 21.3333,
+    "yPosRight": 35.3333
+  },
+  {
+    "country": "Morocco",
+    "continent": "Africa",
+    "iso2": "ma",
+    "y1960": 41.73,
+    "y2020": 73.13,
+    "gain": 31.4,
+    "yPosLeft": 21.0,
+    "yPosRight": 46.6667
+  },
+  {
+    "country": "Mozambique",
+    "continent": "Africa",
+    "iso2": "mz",
+    "y1960": 41.2,
+    "y2020": 61.39,
+    "gain": 20.19,
+    "yPosLeft": 20.6667,
+    "yPosRight": 16.0
+  },
+  {
+    "country": "Laos",
+    "continent": "Asia",
+    "iso2": "la",
+    "y1960": 41.04,
+    "y2020": 68.34,
+    "gain": 27.3,
+    "yPosLeft": 20.3333,
+    "yPosRight": 30.0
+  },
+  {
+    "country": "Algeria",
+    "continent": "Africa",
+    "iso2": "dz",
+    "y1960": 40.84,
+    "y2020": 73.26,
+    "gain": 32.42,
+    "yPosLeft": 20.0,
+    "yPosRight": 47.0
+  },
+  {
+    "country": "Comoros",
+    "continent": "Africa",
+    "iso2": "km",
+    "y1960": 40.78,
+    "y2020": 65.76,
+    "gain": 24.98,
+    "yPosLeft": 19.6667,
+    "yPosRight": 24.3333
+  },
+  {
+    "country": "Libya",
+    "continent": "Africa",
+    "iso2": "ly",
+    "y1960": 40.75,
+    "y2020": 72.39,
+    "gain": 31.64,
+    "yPosLeft": 19.3333,
+    "yPosRight": 44.3333
+  },
+  {
+    "country": "Democratic Republic of Congo",
+    "continent": "Africa",
+    "iso2": "cd",
+    "y1960": 40.75,
+    "y2020": 60.43,
+    "gain": 19.68,
+    "yPosLeft": 19.0,
+    "yPosRight": 14.3333
+  },
+  {
+    "country": "Senegal",
+    "continent": "Africa",
+    "iso2": "sn",
+    "y1960": 39.67,
+    "y2020": 67.5,
+    "gain": 27.83,
+    "yPosLeft": 18.6667,
+    "yPosRight": 28.6667
+  },
+  {
+    "country": "Ethiopia",
+    "continent": "Africa",
+    "iso2": "et",
+    "y1960": 39.62,
+    "y2020": 65.97,
+    "gain": 26.35,
+    "yPosLeft": 18.3333,
+    "yPosRight": 25.0
+  },
+  {
+    "country": "Central African Republic",
+    "continent": "Africa",
+    "iso2": "cf",
+    "y1960": 39.57,
+    "y2020": 50.6,
+    "gain": 11.02,
+    "yPosLeft": 18.0,
+    "yPosRight": 10.0
+  },
+  {
+    "country": "Chad",
+    "continent": "Africa",
+    "iso2": "td",
+    "y1960": 39.22,
+    "y2020": 53.08,
+    "gain": 13.87,
+    "yPosLeft": 17.6667,
+    "yPosRight": 10.6667
+  },
+  {
+    "country": "Benin",
+    "continent": "Africa",
+    "iso2": "bj",
+    "y1960": 38.77,
+    "y2020": 60.15,
+    "gain": 21.38,
+    "yPosLeft": 17.3333,
+    "yPosRight": 14.0
+  },
+  {
+    "country": "Nepal",
+    "continent": "Asia",
+    "iso2": "np",
+    "y1960": 38.65,
+    "y2020": 69.11,
+    "gain": 30.45,
+    "yPosLeft": 17.0,
+    "yPosRight": 32.0
+  },
+  {
+    "country": "Maldives",
+    "continent": "Asia",
+    "iso2": "mv",
+    "y1960": 38.24,
+    "y2020": 78.71,
+    "gain": 40.47,
+    "yPosLeft": 16.6667,
+    "yPosRight": 68.6667
+  },
+  {
+    "country": "Liberia",
+    "continent": "Africa",
+    "iso2": "lr",
+    "y1960": 38.07,
+    "y2020": 61.27,
+    "gain": 23.19,
+    "yPosLeft": 16.3333,
+    "yPosRight": 15.3333
+  },
+  {
+    "country": "Angola",
+    "continent": "Africa",
+    "iso2": "ao",
+    "y1960": 37.93,
+    "y2020": 63.12,
+    "gain": 25.18,
+    "yPosLeft": 16.0,
+    "yPosRight": 19.3333
+  },
+  {
+    "country": "Guinea-Bissau",
+    "continent": "Africa",
+    "iso2": "gw",
+    "y1960": 37.55,
+    "y2020": 61.34,
+    "gain": 23.79,
+    "yPosLeft": 15.6667,
+    "yPosRight": 15.6667
+  },
+  {
+    "country": "Eritrea",
+    "continent": "Africa",
+    "iso2": "er",
+    "y1960": 37.44,
+    "y2020": 66.98,
+    "gain": 29.54,
+    "yPosLeft": 15.3333,
+    "yPosRight": 28.0
+  },
+  {
+    "country": "Cote d'Ivoire",
+    "continent": "Africa",
+    "iso2": "ci",
+    "y1960": 37.24,
+    "y2020": 60.14,
+    "gain": 22.9,
+    "yPosLeft": 15.0,
+    "yPosRight": 13.6667
+  },
+  {
+    "country": "Nigeria",
+    "continent": "Africa",
+    "iso2": "ng",
+    "y1960": 37.21,
+    "y2020": 53.07,
+    "gain": 15.87,
+    "yPosLeft": 14.6667,
+    "yPosRight": 10.3333
+  },
+  {
+    "country": "Guinea",
+    "continent": "Africa",
+    "iso2": "gn",
+    "y1960": 36.62,
+    "y2020": 59.35,
+    "gain": 22.73,
+    "yPosLeft": 14.3333,
+    "yPosRight": 12.3333
+  },
+  {
+    "country": "Bhutan",
+    "continent": "Asia",
+    "iso2": "bt",
+    "y1960": 36.37,
+    "y2020": 72.25,
+    "gain": 35.89,
+    "yPosLeft": 14.0,
+    "yPosRight": 42.3333
+  },
+  {
+    "country": "Niger",
+    "continent": "Africa",
+    "iso2": "ne",
+    "y1960": 36.19,
+    "y2020": 59.89,
+    "gain": 23.7,
+    "yPosLeft": 13.6667,
+    "yPosRight": 13.3333
+  },
+  {
+    "country": "Burkina Faso",
+    "continent": "Africa",
+    "iso2": "bf",
+    "y1960": 36.07,
+    "y2020": 60.45,
+    "gain": 24.38,
+    "yPosLeft": 13.3333,
+    "yPosRight": 14.6667
+  },
+  {
+    "country": "Oman",
+    "continent": "Asia",
+    "iso2": "om",
+    "y1960": 35.43,
+    "y2020": 77.76,
+    "gain": 42.33,
+    "yPosLeft": 13.0,
+    "yPosRight": 65.3333
+  },
+  {
+    "country": "Malawi",
+    "continent": "Africa",
+    "iso2": "mw",
+    "y1960": 34.99,
+    "y2020": 65.22,
+    "gain": 30.23,
+    "yPosLeft": 12.6667,
+    "yPosRight": 23.3333
+  },
+  {
+    "country": "Cameroon",
+    "continent": "Africa",
+    "iso2": "cm",
+    "y1960": 34.67,
+    "y2020": 61.67,
+    "gain": 27.01,
+    "yPosLeft": 12.3333,
+    "yPosRight": 17.6667
+  },
+  {
+    "country": "Gambia",
+    "continent": "Africa",
+    "iso2": "gm",
+    "y1960": 34.57,
+    "y2020": 64.42,
+    "gain": 29.84,
+    "yPosLeft": 12.0,
+    "yPosRight": 21.6667
+  },
+  {
+    "country": "Yemen",
+    "continent": "Asia",
+    "iso2": "ye",
+    "y1960": 33.46,
+    "y2020": 66.44,
+    "gain": 32.97,
+    "yPosLeft": 11.6667,
+    "yPosRight": 26.0
+  },
+  {
+    "country": "China",
+    "continent": "Asia",
+    "iso2": "cn",
+    "y1960": 33.42,
+    "y2020": 78.02,
+    "gain": 44.6,
+    "yPosLeft": 11.3333,
+    "yPosRight": 66.0
+  },
+  {
+    "country": "Sierra Leone",
+    "continent": "Africa",
+    "iso2": "sl",
+    "y1960": 33.09,
+    "y2020": 59.69,
+    "gain": 26.6,
+    "yPosLeft": 11.0,
+    "yPosRight": 12.6667
+  },
+  {
+    "country": "Afghanistan",
+    "continent": "Asia",
+    "iso2": "af",
+    "y1960": 32.8,
+    "y2020": 61.45,
+    "gain": 28.66,
+    "yPosLeft": 10.6667,
+    "yPosRight": 16.3333
+  },
+  {
+    "country": "Mali",
+    "continent": "Africa",
+    "iso2": "ml",
+    "y1960": 30.46,
+    "y2020": 58.86,
+    "gain": 28.4,
+    "yPosLeft": 10.3333,
+    "yPosRight": 12.0
+  },
+  {
+    "country": "South Sudan",
+    "continent": "Africa",
+    "iso2": "ss",
+    "y1960": 28.05,
+    "y2020": 57.65,
+    "gain": 29.59,
+    "yPosLeft": 10.0,
+    "yPosRight": 11.6667
+  }
+];
+
+// ════════════════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════════════════
+const COLORS = {
+  Africa: "#ff5872", Americas: "#00d5e9",
+  Asia: "#7feb02", Europe: "#3B90FF", Oceania: "#E37900"
+};
+const LABEL_COLORS = {
+  Africa: "#ff5872", Americas: "#00c4d8",
+  Asia: "#5aaa00",  Europe: "#3B90FF", Oceania: "#E37900"
+};
+
+const W = 1090, H = 940;
+const M = { t: 80, r: 12, b: 52, l: 12 };
+const LPAD = 238, RPAD = 238, GAP = 16;
+const X0 = M.l + LPAD + GAP;      // 1960 x position
+const X1 = W - M.r - RPAD - GAP;  // 2020 x position
+const INNER_H = H - M.t - M.b;
+
+const y = d3.scaleLinear().domain([10, 87]).range([H - M.b, M.t]);
+
+// Stripe thickness mirrors ggplot linewidth=2.8 proportionally
+const PX_PER_UNIT = INNER_H / 77;
+const STRIPE_H = 2.6 * PX_PER_UNIT;
+
+// ════════════════════════════════════════════════════════
+// SVG SETUP
+// ════════════════════════════════════════════════════════
+const svg = d3.select("#chart").append("svg")
+  .attr("width", W).attr("height", H)
+  .attr("viewBox", `0 0 ${W} ${H}`);
+
+// ── Horizontal stripes (matching R geom_hline linewidth=2.8) ──
+const sg = svg.append("g");
+for (let v = 10; v <= 85; v += 5) {
+  sg.append("rect")
+    .attr("x", X0 - 4).attr("y", y(v) - STRIPE_H / 2)
+    .attr("width", X1 - X0 + 8).attr("height", STRIPE_H)
+    .attr("fill", "#ccffff").attr("opacity", .78);
+}
+
+// ── Y-axis tick labels ──
+const ya = d3.axisLeft(y)
+  .tickValues([30, 40, 50, 60, 70, 80])
+  .tickSize(0)
+  .tickFormat(d => `${d} yr`);
+svg.append("g").attr("transform", `translate(${X0},0)`)
+  .call(ya)
+  .call(g => g.select(".domain").remove())
+  .call(g => g.selectAll("text")
+    .attr("x", -6).attr("font-family", "Atkinson Hyperlegible, sans-serif")
+    .attr("font-size", "11px").attr("fill", "#446666"));
+
+// ── Year labels ──
+["1960", "2020"].forEach((yr, i) => {
+  svg.append("text")
+    .attr("x", i === 0 ? X0 : X1).attr("y", M.t - 30)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "Atkinson Hyperlegible, sans-serif")
+    .attr("font-size", "24px").attr("font-weight", "700").attr("fill", "#1a3333")
+    .text(yr);
+});
+svg.append("text")
+  .attr("x", (X0 + X1) / 2).attr("y", M.t - 30)
+  .attr("text-anchor", "middle").attr("font-size", "17px").attr("fill", "#559999")
+  .text("→");
+
+// ── Vertical axis lines ──
+[X0, X1].forEach(x => {
+  svg.append("line")
+    .attr("x1", x).attr("x2", x)
+    .attr("y1", y(87) - 8).attr("y2", y(10) + 8)
+    .attr("stroke", "#1a3333").attr("stroke-width", 1.2).attr("stroke-opacity", .25);
+});
+
+// ════════════════════════════════════════════════════════
+// LABELS (spread evenly — mirrors R seq(87,10,length.out=n))
+// ════════════════════════════════════════════════════════
+const sorted1960 = [...DATA].sort((a,b) => b.y1960 - a.y1960);
+const sorted2020 = [...DATA].sort((a,b) => b.y2020 - a.y2020);
+
+const lgL = svg.append("g");
+const lgR = svg.append("g");
+
+const llabels = lgL.selectAll("text").data(sorted1960).join("text")
+  .attr("class", "clabel")
+  .attr("data-country", d => d.country)
+  .attr("x", X0 - 10).attr("y", d => y(d.yPosLeft))
+  .attr("text-anchor", "end").attr("dominant-baseline", "middle")
+  .attr("font-family", "Atkinson Hyperlegible, sans-serif")
+  .attr("font-size", "6px").attr("font-weight", "700")
+  .attr("fill", d => LABEL_COLORS[d.continent]).attr("opacity", .7)
+  .text(d => d.country.toLowerCase());
+
+const rlabels = lgR.selectAll("text").data(sorted2020).join("text")
+  .attr("class", "clabel")
+  .attr("data-country", d => d.country)
+  .attr("x", X1 + 10).attr("y", d => y(d.yPosRight))
+  .attr("text-anchor", "start").attr("dominant-baseline", "middle")
+  .attr("font-family", "Atkinson Hyperlegible, sans-serif")
+  .attr("font-size", "6px").attr("font-weight", "700")
+  .attr("fill", d => LABEL_COLORS[d.continent]).attr("opacity", .7)
+  .text(d => d.country.toLowerCase());
+
+// ════════════════════════════════════════════════════════
+// LINES + HIT AREAS
+// ════════════════════════════════════════════════════════
+const lg = svg.append("g");
+
+// Visual lines
+const clines = lg.selectAll("path.cline").data(DATA).join("path")
+  .attr("class", "cline")
+  .attr("data-country", d => d.country)
+  .attr("d", d => `M ${X0} ${y(d.y1960)} L ${X1} ${y(d.y2020)}`)
+  .attr("stroke", d => COLORS[d.continent])
+  .attr("stroke-width", 1.1).attr("stroke-opacity", .42).attr("fill", "none");
+
+// Wider transparent hit areas on top
+const hitAreas = lg.selectAll("path.hit").data(DATA).join("path")
+  .attr("class", "hit")
+  .attr("data-country", d => d.country)
+  .attr("d", d => `M ${X0} ${y(d.y1960)} L ${X1} ${y(d.y2020)}`);
+
+// ── Endpoint dots ──
+const dg = svg.append("g");
+["y1960", "y2020"].forEach((yr, i) => {
+  dg.selectAll(`circle.${yr}`).data(DATA).join("circle")
+    .attr("class", yr).attr("data-country", d => d.country)
+    .attr("cx", i === 0 ? X0 : X1).attr("cy", d => y(d[yr]))
+    .attr("r", 2.4).attr("fill", d => COLORS[d.continent])
+    .attr("fill-opacity", .46).attr("pointer-events", "none");
+});
+
+// ════════════════════════════════════════════════════════
+// LOAD ANIMATION — clipPath sweeps left→right
+// ════════════════════════════════════════════════════════
+const clipRect = svg.append("defs").append("clipPath").attr("id", "sweep")
+  .append("rect")
+  .attr("x", X0 - 5).attr("y", 0).attr("width", 0).attr("height", H);
+
+lg.attr("clip-path", "url(#sweep)");
+
+clipRect.transition().duration(1600).ease(d3.easeQuadInOut)
+  .attr("width", X1 - X0 + 10)
+  .on("end", () => lg.attr("clip-path", null)); // release clip after anim
+
+// ════════════════════════════════════════════════════════
+// INTERACTION STATE
+// ════════════════════════════════════════════════════════
+let pinned     = null;
+let activeC    = "All";
+let query      = "";
+let topGainers = false;
+
+const tip      = document.getElementById("tip");
+const tFlag    = document.getElementById("t-flag");
+const tName    = document.getElementById("t-name");
+const tCont    = document.getElementById("t-cont");
+const t1960    = document.getElementById("t-1960");
+const t2020    = document.getElementById("t-2020");
+const tGain    = document.getElementById("t-gain");
+const pinNote  = document.getElementById("pin-note");
+
+// ════════════════════════════════════════════════════════
+// CORE RENDER FUNCTION
+// ════════════════════════════════════════════════════════
+function render(hovered) {
+  const top20 = topGainers
+    ? new Set([...DATA].sort((a,b) => b.gain-a.gain).slice(0,20).map(d=>d.country))
+    : null;
+
+  clines.each(function(d) {
+    const inC  = activeC === "All" || d.continent === activeC;
+    const inQ  = !query || d.country.toLowerCase().includes(query);
+    const inT  = !top20 || top20.has(d.country);
+    const vis  = inC && inQ && inT;
+    const hi   = d.country === hovered || d.country === pinned;
+    const el   = d3.select(this);
+
+    if (hovered || pinned) {
+      el.attr("stroke-opacity", hi ? .95 : vis ? .07 : .025)
+        .attr("stroke-width",   hi ? 2.8 :  vis ? .9  : .5);
+    } else {
+      el.attr("stroke-opacity", vis ? .42 : .05)
+        .attr("stroke-width",   vis ? 1.1  : .5);
+    }
+  });
+
+  // Label highlight
+  [llabels, rlabels].forEach(labs => {
+    labs.each(function(d) {
+      const hi  = d.country === hovered || d.country === pinned;
+      const inQ = query ? d.country.toLowerCase().includes(query) : false;
+      const el  = d3.select(this);
+      if (hi || inQ) {
+        el.attr("opacity", 1).attr("font-size", "9.5px");
+      } else {
+        el.attr("opacity", (hovered || pinned || query) ? .06 : .68)
+          .attr("font-size", "6px");
+      }
+    });
+  });
+
+  // Endpoint dots
+  dg.selectAll("circle").each(function(d) {
+    const hi  = d.country === hovered || d.country === pinned;
+    const inC = activeC === "All" || d.continent === activeC;
+    const inQ = !query || d.country.toLowerCase().includes(query);
+    const inT = !top20 || top20.has(d.country);
+    const vis = inC && inQ && inT;
+    const el  = d3.select(this);
+    el.attr("r", hi ? 4 : 2.4)
+      .attr("fill-opacity", hi ? .9 : vis ? .44 : .06);
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// TOOLTIP
+// ════════════════════════════════════════════════════════
+function showTip(d, e) {
+  tFlag.src = `https://flagcdn.com/32x24/${d.iso2}.png`;
+  tFlag.alt = d.country;
+  tName.textContent = d.country;
+  tCont.textContent = d.continent;
+  tCont.style.background = COLORS[d.continent];
+  tCont.style.color = (d.continent==="Americas"||d.continent==="Asia") ? "#1a3333" : "#fff";
+  t1960.textContent = d.y1960 + " yr";
+  t2020.textContent = d.y2020 + " yr";
+  tGain.textContent = `Gain: ${d.gain>=0?"+":""}${d.gain} yr`;
+  tip.style.opacity = "1";
+  moveTip(e);
+}
+function moveTip(e) {
+  const tx = e.clientX + 18;
+  const ty = e.clientY - 12;
+  tip.style.left = (tx + tip.offsetWidth > window.innerWidth ? e.clientX - tip.offsetWidth - 18 : tx) + "px";
+  tip.style.top  = ty + "px";
+}
+function hideTip() { tip.style.opacity = "0"; }
+
+// ════════════════════════════════════════════════════════
+// EVENTS
+// ════════════════════════════════════════════════════════
+hitAreas
+  .on("mouseover", function(e, d) {
+    if (pinned) return;
+    render(d.country);
+    showTip(d, e);
+  })
+  .on("mousemove", function(e, d) {
+    if (!pinned) moveTip(e);
+  })
+  .on("mouseout",  function(e, d) {
+    if (pinned) return;
+    hideTip();
+    render(null);
+  })
+  .on("click",     function(e, d) {
+    e.stopPropagation();
+    if (pinned === d.country) {
+      pinned = null;
+      pinNote.classList.remove("vis");
+      hideTip();
+      render(null);
+    } else {
+      pinned = d.country;
+      pinNote.classList.add("vis");
+      render(d.country);
+      showTip(d, e);
+    }
+  });
+
+svg.on("click", () => {
+  if (pinned) {
+    pinned = null;
+    pinNote.classList.remove("vis");
+    hideTip();
+    render(null);
+  }
+});
+
+// Continent buttons
+document.querySelectorAll(".cbtn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    document.querySelectorAll(".cbtn").forEach(b => b.classList.remove("on"));
+    this.classList.add("on");
+    activeC = this.dataset.c;
+    render(null);
+  });
+});
+
+// Top gainers
+document.getElementById("gbtn").addEventListener("click", function() {
+  topGainers = !topGainers;
+  this.classList.toggle("on");
+  render(null);
+});
+
+// Search
+document.getElementById("srch").addEventListener("input", function() {
+  query = this.value.toLowerCase().trim();
+  render(null);
+});
+
+</script>
+</body>
+</html>
