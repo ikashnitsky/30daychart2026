@@ -65,9 +65,19 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 
 ## Day 5
 
-2026-04-05 \| slope \|
+2026-04-05 \| experimental \|
 [code](src/05-experimental.r) \|
 [pplx](https://www.perplexity.ai/search/day-5-experimental-for-today-i-ldYZ2qw3Q3qBmwhhF902CQ) \|
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mipyshnmak2t) \| [INETRACTIVE D3](https://ikashnitsky.phd/x/d3/05-experimental.html)
 
 ![](out/png/05-experimental.png)
+
+
+## Day 6
+
+2026-04-06 \| Reporters Without Borders \|
+[code](src/06-reporters-without-borders.r) \|
+[pplx](https://www.perplexity.ai/search/day-6-reporters-without-border-0fnnJjJOT8.MzEP6EMtgWw) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3misosgewmk2t) 
+
+![](out/png/06-rsf-press-freedom.png)
