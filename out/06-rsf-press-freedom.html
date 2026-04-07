@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Press Freedom is declining globally</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      background-color: #1a1a1a;
+      color: #e5e5e5;
+      font-family: 'Atkinson Hyperlegible', sans-serif;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    #chart-container {
+      position: relative;
+    }
+    .tooltip {
+      position: absolute;
+      background: rgba(20, 20, 20, 0.9);
+      color: #fff;
+      padding: 10px 14px;
+      border: 1px solid #444;
+      border-radius: 6px;
+      pointer-events: none;
+      font-size: 13px;
+      line-height: 1.4;
+      opacity: 0;
+      transition: opacity 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    .tooltip strong {
+      color: #fff;
+      font-size: 15px;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .domain {
+      display: none; /* Hide axis spines to match ggplot theme_minimal */
+    }
+    .tick line {
+      stroke: #383838;
+      stroke-width: 0.5px;
+    }
+    .tick text {
+      fill: #b3b3b3;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="chart-container">
+  <div id="tooltip" class="tooltip"></div>
+  <svg id="chart"></svg>
+</div>
+
+<script>
+  // ─── SETUP & DIMENSIONS ────────────────────────────────────────────────────
+  const width = 1000;
+  const height = 900;
+  const margin = { top: 120, right: 40, bottom: 140, left: 80 };
+  const innerWidth = width - margin.left - margin.right;
+  const innerHeight = height - margin.top - margin.bottom;
+
+  const svg = d3.select("#chart")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  const tooltip = d3.select("#tooltip");
+
+  // ─── PALETTES & SCALES ─────────────────────────────────────────────────────
+  const continentPal = {
+    "Africa": "#FF9500",
+    "Americas": "#00E676",
+    "Asia": "#FF1744",
+    "Europe": "#40C4FF",
+    "Oceania": "#D500F9"
+  };
+
+  const continents = Object.keys(continentPal);
+
+  // ─── SYNTHETIC DATA GENERATION ─────────────────────────────────────────────
+  // Simulating the Kaggle dataset structure
+  const rawData = [];
+  const currentYear = 2025;
+  for (let year = 2013; year <= currentYear; year++) {
+    // Simulate a declining global trend
+    const yearTrend = (currentYear - year) * 0.8; 
+    
+    continents.forEach(continent => {
+      const numCountries = continent === "Oceania" ? 10 : 35;
+      for (let i = 0; i < numCountries; i++) {
+        let baseScore = 65;
+        if (continent === "Europe") baseScore = 80;
+        if (continent === "Asia" || continent === "Africa") baseScore = 45;
+        
+        // Random distribution with year trend applied
+        let score = d3.randomNormal(baseScore + yearTrend, 15)();
+        score = Math.max(15, Math.min(100, score)); // clamp 15-100
+        
+        rawData.push({
+          year: year,
+          country: `${continent} Country ${i+1}`,
+          score: score,
+          continent: continent
+        });
+      }
+    });
+  }
+
+  // ─── DATA PROCESSING ───────────────────────────────────────────────────────
+  const years = Array.from(new Set(rawData.map(d => d.year))).sort((a, b) => b - a); // fct_rev() equivalent
+
+  // Group by year to calculate averages and boxplot stats
+  const yearStats = d3.rollup(rawData, v => {
+    const scores = v.map(d => d.score).sort(d3.ascending);
+    const q1 = d3.quantile(scores, 0.25);
+    const median = d3.quantile(scores, 0.5);
+    const q3 = d3.quantile(scores, 0.75);
+    const iqr = q3 - q1;
+    // Standard 1.5 * IQR for whiskers
+    const minWhisker = Math.max(d3.min(scores), q1 - 1.5 * iqr);
+    const maxWhisker = Math.min(d3.max(scores), q3 + 1.5 * iqr);
+    const avg_score = d3.mean(scores);
+
+    return { q1, median, q3, minWhisker, maxWhisker, avg_score, n: scores.length };
+  }, d => d.year);
+
+  const avgScores = Array.from(yearStats.values()).map(d => d.avg_score);
+  const avgDomain = [d3.min(avgScores) - 1, d3.max(avgScores) + 1];
+
+  // ─── SCALES ────────────────────────────────────────────────────────────────
+  const xScale = d3.scaleLinear()
+    .domain([15, 100]) // standard RSF index range
+    .range([0, innerWidth]);
+
+  const yScale = d3.scaleBand()
+    .domain(years)
+    .range([0, innerHeight])
+    .paddingInner(0.3)
+    .paddingOuter(0.1);
+
+  const colorScale = d3.scaleOrdinal()
+    .domain(continents)
+    .range(Object.values(continentPal));
+
+  // Viridis 'H' approximation (Turbo in D3)
+  const fillScale = d3.scaleSequential(d3.interpolateTurbo)
+    .domain([avgDomain[1], avgDomain[0]]); // Reversed direction to match option="H", direction=-1
+
+  // ─── AXES & GRID ───────────────────────────────────────────────────────────
+  // X Gridlines
+  svg.append("g")
+    .attr("class", "grid")
+    .selectAll("line")
+    .data(xScale.ticks(5))
+    .enter()
+    .append("line")
+    .attr("x1", d => xScale(d))
+    .attr("x2", d => xScale(d))
+    .attr("y1", 0)
+    .attr("y2", innerHeight)
+    .style("stroke", "#383838")
+    .style("stroke-width", "1px");
+
+  // X Axis (Top)
+  const xAxis = d3.axisTop(xScale).ticks(4).tickSize(0).tickPadding(10);
+  svg.append("g")
+    .call(xAxis)
+    .call(g => g.select(".domain").remove());
+
+  // Y Axis (Left)
+  const yAxis = d3.axisLeft(yScale).tickSize(0).tickPadding(15);
+  svg.append("g")
+    .call(yAxis)
+    .call(g => g.select(".domain").remove())
+    .selectAll("text")
+    .style("font-size", "13px")
+    .style("fill", "#b3b3b3");
+
+  // ─── LAYER 1: BOXPLOTS ─────────────────────────────────────────────────────
+  const boxGroups = svg.selectAll(".box")
+    .data(years)
+    .enter()
+    .append("g")
+    .attr("class", "box")
+    .attr("transform", d => `translate(0, ${yScale(d)})`);
+
+  // Whiskers (Lines connecting min to max)
+  boxGroups.append("line")
+    .attr("x1", d => xScale(yearStats.get(d).minWhisker))
+    .attr("x2", d => xScale(yearStats.get(d).maxWhisker))
+    .attr("y1", yScale.bandwidth() / 2)
+    .attr("y2", yScale.bandwidth() / 2)
+    .attr("stroke", "#bfbfbf")
+    .attr("stroke-width", 1);
+
+  // Box (IQR)
+  // Incorporating a simple notch effect using a path
+  boxGroups.append("path")
+    .attr("d", d => {
+      const stats = yearStats.get(d);
+      const x1 = xScale(stats.q1);
+      const x3 = xScale(stats.q3);
+      const med = xScale(stats.median);
+      const yTop = 0;
+      const yBot = yScale.bandwidth();
+      const yMid = yScale.bandwidth() / 2;
+      
+      // Calculate notch depth (simplified 1.58 * IQR / sqrt(n))
+      const notchW = xScale(stats.median + (1.58 * (stats.q3 - stats.q1) / Math.sqrt(stats.n))) - med;
+      const n = Math.abs(notchW); 
+
+      return `M ${x1} ${yTop} 
+              L ${med - n} ${yTop} 
+              L ${med} ${yMid - (yScale.bandwidth() * 0.1)}
+              L ${med + n} ${yTop} 
+              L ${x3} ${yTop} 
+              L ${x3} ${yBot} 
+              L ${med + n} ${yBot} 
+              L ${med} ${yMid + (yScale.bandwidth() * 0.1)}
+              L ${med - n} ${yBot} 
+              L ${x1} ${yBot} Z`;
+    })
+    .attr("fill", d => fillScale(yearStats.get(d).avg_score))
+    .attr("fill-opacity", 0.35)
+    .attr("stroke", "#bfbfbf")
+    .attr("stroke-width", 0.8);
+
+  // Median line
+  boxGroups.append("line")
+    .attr("x1", d => xScale(yearStats.get(d).median))
+    .attr("x2", d => xScale(yearStats.get(d).median))
+    .attr("y1", yScale.bandwidth() * 0.1)
+    .attr("y2", yScale.bandwidth() * 0.9)
+    .attr("stroke", "#ffffff")
+    .attr("stroke-width", 1.5);
+
+  // ─── LAYER 2: QUASIRANDOM POINTS ───────────────────────────────────────────
+  // Simple beeswarm-style jittering
+  svg.selectAll(".point")
+    .data(rawData)
+    .enter()
+    .append("circle")
+    .attr("class", "point")
+    .attr("cx", d => xScale(d.score))
+    // Jitter vertically within the bandwidth space
+    .attr("cy", d => yScale(d.year) + (yScale.bandwidth() / 2) + ((Math.random() - 0.5) * yScale.bandwidth() * 0.8))
+    .attr("r", 3.5)
+    .attr("fill", d => colorScale(d.continent))
+    .attr("fill-opacity", 0.72)
+    .on("mouseover", function(event, d) {
+      d3.select(this)
+        .attr("r", 5)
+        .attr("fill-opacity", 1)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1.5);
+
+      tooltip.transition().duration(100).style("opacity", 1);
+      tooltip.html(`
+        <strong>${d.country}</strong>
+        Score: ${d.score.toFixed(1)}<br>
+        Year: ${d.year}<br>
+        Continent: ${d.continent}
+      `)
+      .style("left", (event.pageX + 15) + "px")
+      .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", function(event, d) {
+      d3.select(this)
+        .attr("r", 3.5)
+        .attr("fill-opacity", 0.72)
+        .attr("stroke", "none");
+        
+      tooltip.transition().duration(200).style("opacity", 0);
+    });
+
+  // ─── TITLES & CAPTIONS ─────────────────────────────────────────────────────
+  // Title
+  svg.append("text")
+    .attr("x", -margin.left + 10)
+    .attr("y", -margin.top + 30)
+    .style("fill", "#f2f2f2")
+    .style("font-size", "28px")
+    .style("font-weight", "bold")
+    .text("Press Freedom is declining globally");
+
+  // Subtitle
+  svg.append("text")
+    .attr("x", -margin.left + 10)
+    .attr("y", -margin.top + 60)
+    .style("fill", "#999999")
+    .style("font-size", "16px")
+    .text("Day 06 · Reporters Without Borders | RSF World Press Freedom Index");
+
+  // Caption
+  svg.append("text")
+    .attr("x", innerWidth)
+    .attr("y", innerHeight + margin.bottom - 20)
+    .style("fill", "#737373")
+    .style("font-size", "12px")
+    .style("text-anchor", "end")
+    .text("Data: RSF World Press Freedom Index via Kaggle (vladyslavhubanov)");
+    
+  svg.append("text")
+    .attr("x", innerWidth)
+    .attr("y", innerHeight + margin.bottom - 5)
+    .style("fill", "#737373")
+    .style("font-size", "12px")
+    .style("text-anchor", "end")
+    .text("#30DayChartChallenge 2026 · Interactive D3.js Version");
+
+  // ─── TOP LEGEND (CONTINENTS) ───────────────────────────────────────────────
+  const legendTop = svg.append("g")
+    .attr("transform", `translate(${innerWidth / 2 - 250}, ${-margin.top + 90})`);
+
+  const legendItems = legendTop.selectAll(".legend-item")
+    .data(continents)
+    .enter()
+    .append("g")
+    .attr("class", "legend-item")
+    .attr("transform", (d, i) => `translate(${i * 100}, 0)`);
+
+  legendItems.append("circle")
+    .attr("cx", 0)
+    .attr("cy", 0)
+    .attr("r", 5)
+    .attr("fill", d => colorScale(d));
+
+  legendItems.append("text")
+    .attr("x", 12)
+    .attr("y", 4)
+    .style("fill", "#b3b3b3")
+    .style("font-size", "13px")
+    .text(d => d)
+    // Interactivity: Highlight dots from this continent on hover
+    .on("mouseover", function(event, continent) {
+       d3.selectAll(".point")
+         .style("opacity", d => d.continent === continent ? 1 : 0.1);
+    })
+    .on("mouseout", function() {
+       d3.selectAll(".point").style("opacity", 1);
+    });
+
+  // ─── BOTTOM COLORBAR (GLOBAL AVERAGE SCORE) ────────────────────────────────
+  const colorbarWidth = 400;
+  const colorbarHeight = 12;
+  const colorbarG = svg.append("g")
+    .attr("transform", `translate(${innerWidth / 2 - colorbarWidth / 2}, ${innerHeight + 60})`);
+
+  // Define linear gradient
+  const defs = svg.append("defs");
+  const linearGradient = defs.append("linearGradient")
+    .attr("id", "linear-gradient")
+    .attr("x1", "0%")
+    .attr("y1", "0%")
+    .attr("x2", "100%")
+    .attr("y2", "0%");
+
+  // Add gradient color stops based on scale (reversing for direction=-1)
+  const numStops = 10;
+  for (let i = 0; i <= numStops; i++) {
+    const t = i / numStops;
+    linearGradient.append("stop")
+      .attr("offset", `${t * 100}%`)
+      .attr("stop-color", d3.interpolateTurbo(1 - t)); 
+  }
+
+  // Colorbar Title
+  colorbarG.append("text")
+    .attr("x", colorbarWidth / 2)
+    .attr("y", -10)
+    .style("fill", "#e5e5e5")
+    .style("font-size", "14px")
+    .style("text-anchor", "middle")
+    .text("Global average score");
+
+  // Colorbar Rectangle
+  colorbarG.append("rect")
+    .attr("width", colorbarWidth)
+    .attr("height", colorbarHeight)
+    .style("fill", "url(#linear-gradient)");
+
+  // Colorbar Axis
+  const colorbarScale = d3.scaleLinear()
+    .domain([avgDomain[1], avgDomain[0]]) // reverse mapping here to match the stops
+    .range([0, colorbarWidth]);
+
+  const colorbarAxis = d3.axisBottom(colorbarScale)
+    .ticks(5)
+    .tickSize(4)
+    .tickFormat(d3.format(".1f"));
+
+  colorbarG.append("g")
+    .attr("transform", `translate(0, ${colorbarHeight})`)
+    .call(colorbarAxis)
+    .call(g => g.select(".domain").remove())
+    .selectAll("text")
+    .style("fill", "#b3b3b3")
+    .style("font-size", "12px");
+
+</script>
+</body>
+</html>

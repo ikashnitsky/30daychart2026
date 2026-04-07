@@ -81,3 +81,16 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 [bsky](https://bsky.app/profile/ikashnitsky.phd/post/3misosgewmk2t) 
 
 ![](out/png/06-rsf-press-freedom.png)
+
+
+## Day 7
+
+2026-04-07 \| multiscale \|
+[code](src/07-multiscale.r) \| 
+[pplx](https://www.perplexity.ai/search/day-7-multiscale-let-s-build-a-w1hJw63kTy2j3oKyYOdTfg) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mivj526vb22r) 
+
+![](out/png/07-multiscale.png)
+
+
+
