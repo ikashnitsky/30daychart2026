@@ -93,4 +93,12 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 ![](out/png/07-multiscale.png)
 
 
+## Day 8
+
+2026-04-08 \| circular \|
+[code](src/08-circular.r) \| 
+[pplx](https://www.perplexity.ai/search/day-8-circular-let-s-brainstor-v.oDoV8MSyGgZpsKrbrUfg) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mixl6e5lok24) 
+
+![](out/png/08-circular.png)
 
