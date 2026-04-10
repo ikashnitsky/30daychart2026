@@ -102,3 +102,13 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 
 ![](out/png/08-circular.png)
 
+
+## Day 9
+
+2026-04-09 \| wealth \| 
+[code](src/09-wealth.r) \| 
+[pplx](https://www.perplexity.ai/search/day-9-wealth-let-s-explore-wor-OrnqM3hMTa2y1_VvXZDOYA) \|
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mixl6e5lok24) 
+
+![](out/png/09-wealth.png)
+
