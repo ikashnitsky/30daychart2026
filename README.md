@@ -108,7 +108,18 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 2026-04-09 \| wealth \| 
 [code](src/09-wealth.r) \| 
 [pplx](https://www.perplexity.ai/search/day-9-wealth-let-s-explore-wor-OrnqM3hMTa2y1_VvXZDOYA) \|
-[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mixl6e5lok24) 
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mj2iaul6js2l) 
 
 ![](out/png/09-wealth.png)
+
+## Day 10
+
+2026-04-10 \| pop culture \|
+[code](src/10-pop-culture.r) \|
+[pplx](https://www.perplexity.ai/search/day-10-pop-culture-let-s-brain-9xskCxDnT7Wy4ot20nVu5w) \| 
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mj66ams6js2f) 
+
+![](out/png/10-pop-culture.png)
+
+
 
