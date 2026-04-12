@@ -122,4 +122,17 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 ![](out/png/10-pop-culture.png)
 
 
+## Day 11
+
+2026-04-11 \| physical \|
+[code](src/11-physical.r) \|
+[pplx](https://www.perplexity.ai/search/day-11-physical-i-have-an-idea-zBoAcQsAQhW22FDWl_KzGQ) \| 
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mjd4uqemsk2b) 
+
+![](out/png/11-physical.png)
+
+
+
+
+
 

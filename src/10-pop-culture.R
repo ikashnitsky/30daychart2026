@@ -247,7 +247,7 @@ p <- data |>
   ) +
 
   labs(
-    title = "**How old were they when they first ruled the charts?**",
+    title = "When do stars flare up?",
     subtitle = "Age at first Billboard Hot 100 #1 hit, by genre (1958-2021)",
     x = NULL,
     y = NULL,
@@ -255,8 +255,8 @@ p <- data |>
   ) +
 
   theme(
-    plot.title = ggtext::element_markdown(size = 20),
-    plot.subtitle = ggtext::element_markdown(size = 16),
+    plot.title = ggtext::element_markdown(size = 34),
+    plot.subtitle = ggtext::element_markdown(size = 14),
     plot.caption.position = "plot",
     panel.grid.major.y = element_blank(),
     axis.text.y = element_text(size = 16, face = "bold")
