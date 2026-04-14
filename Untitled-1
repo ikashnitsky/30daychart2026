@@ -1,0 +1,72 @@
+#===============================================================================
+# 2023-12-21 -- misc
+# convert pdf to png
+# Ilya Kashnitsky, ilya.kashnitsky@gmail.com, @ikashnitsky
+#===============================================================================
+
+
+#' @description A function to convert all PDFs in a directory into PNGs, or just one if specified.
+#' @param dir_pdfs character. A character string with a path to the directory containing PDFs to convert
+#' @param output_dir character. An optional parameter to specify the output directory for the converted PNGs. Defaults to `"/png"`.
+#' @param pdf_name character. An optional parameter specifying the name of a single PDF file to convert (e.g., "01-part-to-whole.pdf"). Defaults to NULL.
+convert_pdf_to_png <- function(dir_pdfs, output_dir = "/png", pdf_name = NULL) {
+  
+  require(pdftools)
+  require(fs)
+  require(magrittr)
+  require(stringr)
+  require(purrr)
+  
+  pdfs <- dir_ls(dir_pdfs) %>%
+    str_subset("\\.pdf$")
+  
+  # If a specific PDF name is provided, filter the list
+  if (!is.null(pdf_name)) {
+    pdfs <- pdfs[str_detect(pdfs, fixed(pdf_name))]
+    
+    if (length(pdfs) == 0) {
+      stop(paste("The specified file", pdf_name, "was not found in", dir_pdfs))
+    }
+  }
+  
+  if (length(pdfs) == 0) {
+    message("No PDFs found to convert.")
+    return(invisible(NULL))
+  }
+  
+  base <- pdfs[1] %>% 
+    str_remove("/[^/]+$")
+  
+  if(output_dir == "/png"){
+    
+    dir_create(path = paste0(base, "/png"))
+    
+    convert_one_pdf <- function(path_to_pdf){
+      path = path_to_pdf %>% paste
+      pdf_convert(
+        pdf = path, 
+        filenames = path %>% 
+          str_remove(base) %>% 
+          str_replace("\\.pdf$", ".png") %>% 
+          paste0(base, "/png", .), 
+        dpi = 300
+      )
+    }
+    
+  } else {
+    convert_one_pdf <- function(path_to_pdf){
+      path = path_to_pdf %>% paste
+      pdf_convert(
+        pdf = path, 
+        filenames = path %>% 
+          str_remove(base) %>% 
+          str_replace("\\.pdf$", ".png") %>% 
+          paste0(output_dir %>% path_expand %>% paste, .), 
+        dpi = 300
+      )
+    }
+  }
+  
+  pdfs %>% map(convert_one_pdf)
+  
+}

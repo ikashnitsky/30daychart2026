@@ -132,6 +132,26 @@ Alternative (no code): [gemini](https://g.co/gemini/share/33e4c78ebbf5) \|
 ![](out/png/11-physical.png)
 
 
+## Day 12
+
+2026-04-12 \| Flowing Data \|
+[code](src/12-flowing-data.r) \|
+[pplx](https://www.perplexity.ai/search/day-12-flowing-data-let-s-crea-TlOCAKFgSsaUpgY32SLD7g) \| 
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/3mjhxxylxkc2b) 
+
+![](out/png/12-flowing-data.png)
+
+
+## Day 13
+
+2026-04-13 \| ecosystems \|
+[code](src/13-ecosystems.r) \|
+[pplx](https://www.perplexity.ai/search/day-11-physical-i-have-an-idea-zBoAcQsAQhW22FDWl_KzGQ) \| 
+[bsky](https://bsky.app/profile/ikashnitsky.phd/post/) 
+
+![](out/13-linuxcolors-logo-card.png)
+
+
 
 
 
