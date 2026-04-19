@@ -7,4 +7,4 @@
 # convert pdfs to pngs
 devtools::source_gist("c7037e2b1bc6d0d6e38fc4a41de9a8c7")
 
-convert_pdf_to_png("out")
+convert_pdf_to_png("out", pdf_name = "15-correlation.pdf")
